@@ -10,7 +10,7 @@ import type {
 } from '../../types/index.js';
 
 // Mock data directory - update this path to match your generated problem UUID
-const MOCK_DATA_DIR = join(process.cwd(), 'problem', '85c17b55-3105-495c-bd85-6b564bba26fb');
+const MOCK_DATA_DIR = join(process.cwd(), 'problem', 'TEST__GOOD_INPUTS');
 
 // Load mock data
 let mockProblem: Problem;
