@@ -1,8 +1,10 @@
 import { describe, it, expect, beforeAll } from 'bun:test';
 import { readFile } from 'fs/promises';
 import { join } from 'path';
-import { TestRunner } from '../TestRunner.js';
+
 import { BunExecutor } from '../BunExecutor.js';
+import { TestRunner } from '../TestRunner.js';
+
 import type { TestCase } from '../../types/index.js';
 
 const MOCK_DATA_DIR = join(process.cwd(), 'problem', 'TEST__GOOD_INPUTS');
@@ -104,7 +106,8 @@ describe('TestRunner', () => {
   describe('compareOutputs', () => {
     // Access private method through prototype
     const compareOutputs = (actual: unknown, expected: unknown): boolean => {
-      return (testRunner as any).compareOutputs(actual, expected);
+      // @ts-expect-error - This is a test
+      return testRunner.compareOutputs(actual, expected);
     };
 
     it('should compare equal primitives', () => {

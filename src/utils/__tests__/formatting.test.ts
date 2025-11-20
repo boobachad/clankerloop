@@ -1,12 +1,14 @@
 import { describe, it, expect, beforeAll } from 'bun:test';
 import { readFile } from 'fs/promises';
 import { join } from 'path';
+
 import {
   formatProblem,
   formatSampleTestCases,
   formatTestResults,
   formatValue,
 } from '../formatting.js';
+
 import type { Problem, TestCase, TestResult } from '../../types/index.js';
 
 const MOCK_DATA_DIR = join(process.cwd(), 'problem', 'TEST__GOOD_INPUTS');
