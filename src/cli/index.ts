@@ -24,7 +24,7 @@ export async function runCLI(args: string[]): Promise<void> {
     .description('Generate a new coding problem')
     .option('--model <string>', 'AI model to use', 'google/gemini-2.0-flash')
     .option('--difficulty <level>', 'Problem difficulty: easy, medium, hard', 'medium')
-    .option('--language <lang>', 'Target language: javascript, typescript, python', 'javascript')
+    .option('--language <lang>', 'Target language: javascript, typescript, python', 'typescript')
     .option('--topic <string>', "Problem topic (e.g., 'arrays', 'dynamic programming')")
     .option('--tests <number>', 'Number of test cases to generate', '10')
     .option('--samples <number>', 'Number of sample test cases', '3')
@@ -48,7 +48,7 @@ export async function runCLI(args: string[]): Promise<void> {
     .description("Test a user's solution against problem test cases")
     .requiredOption('--problem <file>', 'Path to problem JSON file')
     .requiredOption('--solution <file>', 'Path to solution file')
-    .option('--language <lang>', 'Solution language: javascript, typescript, python', 'javascript')
+    .option('--language <lang>', 'Solution language: javascript, typescript, python', 'typescript')
     .option('--show-hidden', 'Show results of hidden test cases', false)
     .action(async (options) => {
       const solveOptions: SolveOptions = {

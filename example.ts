@@ -13,7 +13,7 @@ import type { Language } from './src/types/index.js';
 async function main() {
   // Configuration
   const model = 'google/gemini-2.0-flash'; // or "openai/gpt-4", etc.
-  const language: Language = 'javascript';
+  const language: Language = 'typescript';
 
   console.log('='.repeat(80));
   console.log('AI LeetCode Generator - Programmatic Example');

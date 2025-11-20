@@ -2,7 +2,6 @@ import { randomUUID } from 'crypto';
 import { mkdir } from 'fs/promises';
 import { join } from 'path';
 
-
 import { generateCompleteProblem } from '../generator/index.js';
 import { formatProblem, formatSampleTestCases, showProgress, showSuccess } from '../utils/index.js';
 
@@ -25,7 +24,7 @@ export async function generateCommand(options: GenerateOptions): Promise<void> {
   const {
     model,
     difficulty = 'medium',
-    language = 'javascript',
+    language = 'typescript',
     topic,
     numTestCases = 10,
     numSamples = 3,
