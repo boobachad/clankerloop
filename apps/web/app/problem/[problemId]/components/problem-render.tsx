@@ -7,10 +7,9 @@ import Loader from "@/components/client/loader";
 import { useAtomValue, useSetAtom } from "jotai";
 import {
   callGenerateProblemTextAtom,
-  callGenerateTestCaseInputsAtom,
   callGenerateTestCasesAtom,
+  getCodeToGenerateTestCaseInputsAtom,
   getProblemTextAtom,
-  getTestCaseInputsAtom,
   getTestCasesAtom,
   isProblemTextLoadingAtom,
   isTestCaseInputsLoadingAtom,
@@ -19,6 +18,11 @@ import {
   problemTextAtom,
   testCaseInputsAtom,
   testCasesAtom,
+  testCaseInputCodeAtom,
+  callGenerateTestCaseInputsAtom,
+  isGenerateTestCaseInputsLoadingAtom,
+  callGenerateTestCaseInputCodeAtom,
+  getTestCaseInputsAtom,
 } from "@/atoms";
 
 export default function ProblemRender({ problemId }: { problemId: string }) {
@@ -32,8 +36,18 @@ export default function ProblemRender({ problemId }: { problemId: string }) {
   const callGenerateTestCases = useSetAtom(callGenerateTestCasesAtom);
   const getTestCases = useSetAtom(getTestCasesAtom);
   const isTestCaseInputsLoading = useAtomValue(isTestCaseInputsLoadingAtom);
-  const testCaseInputs = useAtomValue(testCaseInputsAtom);
+  const testCaseInputCode = useAtomValue(testCaseInputCodeAtom);
+  const callGenerateTestCaseInputCode = useSetAtom(
+    callGenerateTestCaseInputCodeAtom
+  );
+  const getCodeToGenerateTestCaseInputs = useSetAtom(
+    getCodeToGenerateTestCaseInputsAtom
+  );
   const callGenerateTestCaseInputs = useSetAtom(callGenerateTestCaseInputsAtom);
+  const isGenerateTestCaseInputsLoading = useAtomValue(
+    isGenerateTestCaseInputsLoadingAtom
+  );
+  const testCaseInputs = useAtomValue(testCaseInputsAtom);
   const getTestCaseInputs = useSetAtom(getTestCaseInputsAtom);
 
   useEffect(() => {
@@ -49,8 +63,12 @@ export default function ProblemRender({ problemId }: { problemId: string }) {
   }, [getTestCases, problemId, problemText]);
 
   useEffect(() => {
+    getCodeToGenerateTestCaseInputs();
+  }, [getCodeToGenerateTestCaseInputs, problemId, testCases]);
+
+  useEffect(() => {
     getTestCaseInputs();
-  }, [getTestCaseInputs, problemId, testCases]);
+  }, [getTestCaseInputs, problemId, testCaseInputCode]);
 
   return (
     <div>
@@ -96,17 +114,38 @@ export default function ProblemRender({ problemId }: { problemId: string }) {
       <div>
         <Button
           variant={"outline"}
-          onClick={() => callGenerateTestCaseInputs()}
+          onClick={() => callGenerateTestCaseInputCode()}
         >
           Generate Test Case Inputs
         </Button>
         {isTestCaseInputsLoading ? (
           <Loader />
         ) : (
+          testCaseInputCode && (
+            <div>
+              {testCaseInputCode.map((testCaseInput, i) => (
+                <div key={`testcase-input-${i}`}>{testCaseInput.inputCode}</div>
+              ))}
+            </div>
+          )
+        )}
+      </div>
+      <div>
+        <Button
+          variant={"outline"}
+          onClick={() => callGenerateTestCaseInputs()}
+        >
+          Run Generate Input
+        </Button>
+        {isGenerateTestCaseInputsLoading ? (
+          <Loader />
+        ) : (
           testCaseInputs && (
             <div>
-              {testCaseInputs.map((testCaseInput, i) => (
-                <div key={`testcase-input-${i}`}>{testCaseInput.inputCode}</div>
+              {testCaseInputs.map((result, i) => (
+                <div key={`run-generate-input-result-${i}`}>
+                  {JSON.stringify(result)}
+                </div>
               ))}
             </div>
           )
