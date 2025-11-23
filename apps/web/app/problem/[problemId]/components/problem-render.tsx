@@ -23,6 +23,10 @@ import {
   isGenerateTestCaseInputsLoadingAtom,
   callGenerateTestCaseInputCodeAtom,
   getTestCaseInputsAtom,
+  isGenerateSolutionLoadingAtom,
+  solutionAtom,
+  getSolutionAtom,
+  callGenerateSolutionAtom,
 } from "@/atoms";
 
 export default function ProblemRender({ problemId }: { problemId: string }) {
@@ -49,6 +53,10 @@ export default function ProblemRender({ problemId }: { problemId: string }) {
   );
   const testCaseInputs = useAtomValue(testCaseInputsAtom);
   const getTestCaseInputs = useSetAtom(getTestCaseInputsAtom);
+  const isGenerateSolutionLoading = useAtomValue(isGenerateSolutionLoadingAtom);
+  const solution = useAtomValue(solutionAtom);
+  const callGenerateSolution = useSetAtom(callGenerateSolutionAtom);
+  const getSolution = useSetAtom(getSolutionAtom);
 
   useEffect(() => {
     setProblemId(problemId);
@@ -69,6 +77,10 @@ export default function ProblemRender({ problemId }: { problemId: string }) {
   useEffect(() => {
     getTestCaseInputs();
   }, [getTestCaseInputs, problemId, testCaseInputCode]);
+
+  useEffect(() => {
+    getSolution();
+  }, [getSolution, problemId]);
 
   return (
     <div>
@@ -149,6 +161,16 @@ export default function ProblemRender({ problemId }: { problemId: string }) {
               ))}
             </div>
           )
+        )}
+      </div>
+      <div>
+        <Button variant={"outline"} onClick={() => callGenerateSolution()}>
+          Generate Solution
+        </Button>
+        {isGenerateSolutionLoading ? (
+          <Loader />
+        ) : (
+          solution && <MessageResponse>{solution}</MessageResponse>
         )}
       </div>
     </div>
