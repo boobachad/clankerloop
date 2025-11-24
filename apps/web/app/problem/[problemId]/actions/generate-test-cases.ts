@@ -1,14 +1,9 @@
 "use server";
 import { generateObject } from "ai";
 import { z } from "zod/v3";
-import { getProblemText } from "./generate-problem-text";
-import { join } from "path";
-import { mkdir } from "fs/promises";
-import { writeFile } from "fs/promises";
-import { readFile } from "fs/promises";
-
+import { getProblem, TestCase, updateProblem } from "@/app/api/problem-crud";
 export async function generateTestCases(problemId: string) {
-  const problemText = await getProblemText(problemId);
+  const { problemText } = await getProblem(problemId);
   const { object } = await generateObject({
     model: "google/gemini-2.5-flash",
     prompt: `You're given the problem text: ${JSON.stringify(problemText)}. Generate NATURAL LANGUAGE test case DESCRIPTIONS for the problem.
@@ -35,27 +30,15 @@ export async function generateTestCases(problemId: string) {
     }),
   });
 
-  const problemsDir = join(process.cwd(), "problems");
-  const problemFile = join(problemsDir, `${problemId}.json`);
-
-  // Ensure problems directory exists
-  await mkdir(problemsDir, { recursive: true });
-
   // Save the problem text to the JSON file
-  await writeFile(
-    problemFile,
-    JSON.stringify(
-      { problemId, ...problemText, testCases: object.testCases },
-      null,
-      2
-    )
-  );
+  await updateProblem(problemId, {
+    // TODO: Remove type assertion
+    testCases: object.testCases as TestCase[],
+  });
   return object.testCases;
 }
 
 export async function getTestCases(problemId: string) {
-  const problemsDir = join(process.cwd(), "problems");
-  const problemFile = join(problemsDir, `${problemId}.json`);
-  const testCases = JSON.parse(await readFile(problemFile, "utf8")).testCases;
+  const { testCases } = await getProblem(problemId);
   return testCases;
 }

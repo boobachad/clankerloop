@@ -1,10 +1,8 @@
 "use server";
 import { generateObject } from "ai";
 import { z } from "zod/v3";
-import { join } from "path";
-import { writeFile } from "fs/promises";
-import { readFile } from "fs/promises";
 import { DEFAULT_LANGUAGE } from "@/lib/consts";
+import { getProblem, updateProblem } from "@/app/api/problem-crud";
 
 interface TestCase {
   description: string;
@@ -13,12 +11,8 @@ interface TestCase {
 }
 
 export async function generateSolution(problemId: string) {
-  const problemsDir = join(process.cwd(), "problems");
-  const problemFile = join(problemsDir, `${problemId}.json`);
-
-  // Read existing problem data
-  const problemData = JSON.parse(await readFile(problemFile, "utf8"));
-  const { problemText, functionSignature, testCases } = problemData;
+  const { problemText, functionSignature, testCases } =
+    await getProblem(problemId);
 
   if (!testCases || testCases.length === 0) {
     throw new Error(
@@ -31,7 +25,7 @@ export async function generateSolution(problemId: string) {
     model: "google/gemini-2.5-flash",
     prompt: `Generate executable ${DEFAULT_LANGUAGE} code that solves the following problem.
 
-Problem: ${typeof problemText === "string" ? problemText : problemText.problemText || ""}
+Problem: ${problemText}
 
 Function Signature (${DEFAULT_LANGUAGE}):
 ${functionSignature.typescript}
@@ -54,17 +48,12 @@ Generate code that passes all the test cases.
   const solution = object.solution;
 
   // Save updated test cases back to the JSON file
-  await writeFile(
-    problemFile,
-    JSON.stringify({ ...problemData, solution }, null, 2)
-  );
+  await updateProblem(problemId, { solution });
 
   return solution;
 }
 
 export async function getSolution(problemId: string) {
-  const problemsDir = join(process.cwd(), "problems");
-  const problemFile = join(problemsDir, `${problemId}.json`);
-  const { solution } = JSON.parse(await readFile(problemFile, "utf8"));
+  const { solution } = await getProblem(problemId);
   return solution;
 }

@@ -1,24 +1,12 @@
 "use server";
 import { generateObject } from "ai";
 import { z } from "zod/v3";
-import { join } from "path";
-import { writeFile } from "fs/promises";
-import { readFile } from "fs/promises";
 import { DEFAULT_LANGUAGE } from "@/lib/consts";
-
-interface TestCase {
-  description: string;
-  isEdgeCase: boolean;
-  inputCode?: string;
-}
+import { getProblem, TestCase, updateProblem } from "@/app/api/problem-crud";
 
 export async function generateTestCaseInputCode(problemId: string) {
-  const problemsDir = join(process.cwd(), "problems");
-  const problemFile = join(problemsDir, `${problemId}.json`);
-
-  // Read existing problem data
-  const problemData = JSON.parse(await readFile(problemFile, "utf8"));
-  const { problemText, functionSignature, testCases } = problemData;
+  const { problemText, functionSignature, testCases } =
+    await getProblem(problemId);
 
   if (!testCases || testCases.length === 0) {
     throw new Error(
@@ -31,7 +19,7 @@ export async function generateTestCaseInputCode(problemId: string) {
     model: "google/gemini-2.5-flash",
     prompt: `Generate executable ${DEFAULT_LANGUAGE} code that produces the input for test cases.
 
-Problem: ${typeof problemText === "string" ? problemText : problemText.problemText || ""}
+Problem: ${problemText}
 
 Function Signature (${DEFAULT_LANGUAGE}):
 ${functionSignature.typescript}
@@ -80,7 +68,7 @@ function generateTestInput() {
   });
 
   // Merge inputCode into existing test cases
-  const updatedTestCases = testCases.map(
+  const updatedTestCases: TestCase[] = testCases.map(
     (testCase: TestCase, index: number) => {
       const inputCode = object.testCaseInputs[index]?.inputCode;
       if (!inputCode) {
@@ -96,17 +84,12 @@ function generateTestInput() {
   );
 
   // Save updated test cases back to the JSON file
-  await writeFile(
-    problemFile,
-    JSON.stringify({ ...problemData, testCases: updatedTestCases }, null, 2)
-  );
+  await updateProblem(problemId, { testCases: updatedTestCases });
 
   return updatedTestCases;
 }
 
 export async function getTestCaseInputCode(problemId: string) {
-  const problemsDir = join(process.cwd(), "problems");
-  const problemFile = join(problemsDir, `${problemId}.json`);
-  const testCases = JSON.parse(await readFile(problemFile, "utf8")).testCases;
+  const { testCases } = await getProblem(problemId);
   return testCases;
 }

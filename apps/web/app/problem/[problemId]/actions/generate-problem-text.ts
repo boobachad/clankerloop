@@ -1,9 +1,7 @@
 "use server";
 import { generateObject } from "ai";
 import { z } from "zod/v3";
-import { writeFile, mkdir } from "fs/promises";
-import { join } from "path";
-import { readFile } from "fs/promises";
+import { getProblem, updateProblem } from "@/app/api/problem-crud";
 
 export async function generateProblemText(problemId: string) {
   const { object } = await generateObject({
@@ -27,25 +25,10 @@ export async function generateProblemText(problemId: string) {
     }),
   });
 
-  const problemsDir = join(process.cwd(), "problems");
-  const problemFile = join(problemsDir, `${problemId}.json`);
-
-  // Ensure problems directory exists
-  await mkdir(problemsDir, { recursive: true });
-
-  // Save the problem text to the JSON file
-  await writeFile(
-    problemFile,
-    JSON.stringify(
-      {
-        problemId,
-        problemText: object.problemText,
-        functionSignature: object.functionSignature,
-      },
-      null,
-      2
-    )
-  );
+  await updateProblem(problemId, {
+    problemText: object.problemText,
+    functionSignature: object.functionSignature,
+  });
 
   return {
     problemText: object.problemText,
@@ -54,10 +37,9 @@ export async function generateProblemText(problemId: string) {
 }
 
 export async function getProblemText(problemId: string) {
-  const problemsDir = join(process.cwd(), "problems");
-  const problemFile = join(problemsDir, `${problemId}.json`);
-  const { problemText, functionSignature } = JSON.parse(
-    await readFile(problemFile, "utf8")
-  );
-  return { problemText, functionSignature };
+  const problem = await getProblem(problemId);
+  return {
+    problemText: problem.problemText,
+    functionSignature: problem.functionSignature,
+  };
 }
