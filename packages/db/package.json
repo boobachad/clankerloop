@@ -1,29 +1,16 @@
 {
   "name": "@repo/db",
-  "version": "0.0.0",
-  "private": true,
+  "module": "index.ts",
   "type": "module",
-  "exports": {
-    ".": "./src/index.ts",
-    "./schema": "./src/schema.ts",
-    "./relations": "./src/relations.ts"
+  "devDependencies": {
+    "@types/bun": "latest"
   },
-  "scripts": {
-    "db:generate": "drizzle-kit generate",
-    "db:migrate": "drizzle-kit migrate",
-    "db:push": "drizzle-kit push",
-    "db:studio": "drizzle-kit studio",
-    "db:seed": "bun run src/seed.ts",
-    "check-types": "tsc --noEmit"
+  "peerDependencies": {
+    "typescript": "^5.0.0"
   },
   "dependencies": {
+    "dotenv": "^17.2.3",
     "drizzle-orm": "^0.44.7",
     "pg": "^8.16.3"
-  },
-  "devDependencies": {
-    "@repo/typescript-config": "*",
-    "@types/pg": "^8.15.6",
-    "drizzle-kit": "^0.31.7",
-    "typescript": "^5.0.0"
   }
 }
