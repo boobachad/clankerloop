@@ -47,6 +47,7 @@ export async function getProblem(
 
   const problemTestCases = await db.query.testCases.findMany({
     where: eq(testCases.problemId, problemId),
+    orderBy: testCases.createdAt,
   });
 
   return {
@@ -102,10 +103,7 @@ export async function updateTestCase(
   testCaseId: string,
   data: Partial<Omit<NewTestCase, "id" | "problemId" | "createdAt">>
 ): Promise<void> {
-  await db
-    .update(testCases)
-    .set(data)
-    .where(eq(testCases.id, testCaseId));
+  await db.update(testCases).set(data).where(eq(testCases.id, testCaseId));
 }
 
 export async function deleteTestCases(problemId: string): Promise<void> {

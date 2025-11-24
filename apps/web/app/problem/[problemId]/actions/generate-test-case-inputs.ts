@@ -6,31 +6,44 @@ import { DEFAULT_LANGUAGE } from "@/lib/consts";
 import { getProblem, updateTestCase, type TestCase } from "@repo/db";
 
 export async function generateTestCaseInputs(problemId: string) {
-  const testCasesInputCode = await getTestCaseInputCode(problemId);
+  // Get existing test cases
+  const { testCases } = await getProblem(problemId);
+  if (!testCases) {
+    throw new Error(
+      "No code found to generate test case inputs for problem ID: " +
+        problemId +
+        ". You must generate the code first."
+    );
+  }
   const sandbox = await Sandbox.create(DEFAULT_LANGUAGE);
 
   // Run executions sequentially to avoid conflicts with single-process sandbox
   const results: unknown[] = [];
-  for (const testCaseInputCode of testCasesInputCode) {
+  for (const testCase of testCases) {
     // TODO: handle errors
     const result = await sandbox.run(
-      testCaseInputCode.inputCode +
+      testCase.inputCode +
         "; const output = generateTestInput();" +
         // Write the output to a file
         "require('fs').writeFileSync('output.json', JSON.stringify(output));"
     );
+    if (result.exitCode !== 1) {
+      throw new Error(
+        `Failed to generate test case input for test case ${testCase.id}: ${JSON.stringify(result)}`
+      );
+    }
     console.log("Result of running sandbox code:", result);
     results.push(JSON.parse(await sandbox.readFile("output.json")));
   }
 
   await sandbox.kill();
 
-  // Get existing test cases
-  const { testCases } = await getProblem(problemId);
-
   // Update each test case with its input
   for (let index = 0; index < testCases.length; index++) {
     const testCase = testCases[index];
+    if (!testCase) {
+      throw new Error(`Test case at index ${index} is undefined`);
+    }
     const result = results[index];
     if (result === undefined) {
       throw new Error(`Failed to generate result for test case ${index + 1}`);
