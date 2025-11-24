@@ -113,9 +113,7 @@ export default function ProblemRender({ problemId }: { problemId: string }) {
           problemText && (
             <>
               <MessageResponse>{problemText.problemText}</MessageResponse>
-              <MessageResponse>
-                {problemText.functionSignature}
-              </MessageResponse>
+              <MessageResponse>{problemText.functionSignature}</MessageResponse>
             </>
           )
         )}
@@ -152,7 +150,7 @@ export default function ProblemRender({ problemId }: { problemId: string }) {
           testCaseInputCode && (
             <div>
               {testCaseInputCode.map((testCaseInput, i) => (
-                <div key={`testcase-input-${i}`}>{testCaseInput.inputCode}</div>
+                <div key={`testcase-input-${i}`}>{testCaseInput}</div>
               ))}
             </div>
           )

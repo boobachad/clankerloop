@@ -95,7 +95,7 @@ export const getTestCasesAtom = atom(null, async (get, set) => {
 });
 
 export const isTestCaseInputsLoadingAtom = atom(false);
-export const testCaseInputCodeAtom = atom<{ inputCode: string }[] | null>(null);
+export const testCaseInputCodeAtom = atom<string[] | null>(null);
 
 /**
  * Generate test case inputs

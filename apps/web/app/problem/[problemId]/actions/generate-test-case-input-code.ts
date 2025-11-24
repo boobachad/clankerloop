@@ -68,9 +68,12 @@ function generateTestInput() {
   });
 
   // Update each test case with its input code
-  const updatedTestCases: TestCase[] = [];
+  const inputCodes: string[] = [];
   for (let index = 0; index < testCases.length; index++) {
     const testCase = testCases[index];
+    if (!testCase) {
+      throw new Error(`Test case at index ${index} is undefined`);
+    }
     const inputCode = object.testCaseInputs[index]?.inputCode;
     if (!inputCode) {
       throw new Error(
@@ -78,13 +81,21 @@ function generateTestInput() {
       );
     }
     await updateTestCase(testCase.id, { inputCode });
-    updatedTestCases.push({ ...testCase, inputCode });
+    inputCodes.push(inputCode);
   }
 
-  return updatedTestCases;
+  return inputCodes;
 }
 
 export async function getTestCaseInputCode(problemId: string) {
   const { testCases } = await getProblem(problemId);
-  return testCases;
+  if (!testCases) {
+    return null;
+  }
+  return testCases.map((testCase: TestCase) => {
+    if (!testCase.inputCode) {
+      throw new Error(`Test case ${testCase.id} has no input code`);
+    }
+    return testCase.inputCode;
+  });
 }
