@@ -14,18 +14,15 @@ import {
   generateTestCaseOutputs,
   getTestCaseOutputs,
   runUserSolution,
-  type SandboxConfig,
 } from "@/problem-actions";
-import { getSandbox, proxyToSandbox, type Sandbox } from "@cloudflare/sandbox";
+import { getSandbox } from "@cloudflare/sandbox";
+import { Sandbox } from "@/problem-actions";
 
 const problems = new Hono<{ Bindings: Env }>();
 
-const getSandboxConfig = (): SandboxConfig => {
-  const apiKey = process.env.DAYTONA_API_KEY;
-  if (!apiKey) {
-    throw new Error("DAYTONA_API_KEY environment variable is not set");
-  }
-  return { apiKey };
+const getSandboxInstance = (env: Env, sandboxId: string): Sandbox => {
+  const cloudflareSandbox = getSandbox(env.Sandbox, sandboxId);
+  return new Sandbox(cloudflareSandbox);
 };
 
 // Problem text
@@ -70,7 +67,9 @@ problems.get("/:problemId/test-cases/input-code", async (c) => {
 // Test case inputs
 problems.post("/:problemId/test-cases/inputs/generate", async (c) => {
   const problemId = c.req.param("problemId");
-  const result = await generateTestCaseInputs(problemId, getSandboxConfig());
+  const sandboxId = `test-inputs-${problemId}`;
+  const sandbox = getSandboxInstance(c.env, sandboxId);
+  const result = await generateTestCaseInputs(problemId, sandbox);
   return c.json({ success: true, data: result });
 });
 
@@ -96,7 +95,9 @@ problems.get("/:problemId/solution", async (c) => {
 // Test case outputs
 problems.post("/:problemId/test-cases/outputs/generate", async (c) => {
   const problemId = c.req.param("problemId");
-  const result = await generateTestCaseOutputs(problemId, getSandboxConfig());
+  const sandboxId = `test-outputs-${problemId}`;
+  const sandbox = getSandboxInstance(c.env, sandboxId);
+  const result = await generateTestCaseOutputs(problemId, sandbox);
   return c.json({ success: true, data: result });
 });
 
@@ -121,16 +122,9 @@ problems.post("/:problemId/solution/run", async (c) => {
     );
   }
 
-  const sandbox = getSandbox(c.env.Sandbox, "my-sandbox");
-  const cfResult = await sandbox.exec("bun --version");
-
-  console.log("cfResult", JSON.stringify(cfResult, null, 2));
-
-  const result = await runUserSolution(
-    problemId,
-    body.code,
-    getSandboxConfig()
-  );
+  const sandboxId = `solution-run-${problemId}`;
+  const sandbox = getSandboxInstance(c.env, sandboxId);
+  const result = await runUserSolution(problemId, body.code, sandbox);
   return c.json({ success: true, data: result });
 });
 

@@ -1,48 +1,66 @@
-import { Daytona } from "@daytonaio/sdk";
-import type { SandboxConfig } from "./types";
-
-type SandboxInstance = Awaited<ReturnType<Daytona["create"]>>;
-
 export interface ExecuteCommandResult {
   exitCode: number;
   stdout: string;
 }
 
+interface CloudflareExecResult {
+  success: boolean;
+  exitCode: number;
+  stdout: string;
+  stderr: string;
+  command: string;
+  duration: number;
+  timestamp: string;
+  sessionId?: string;
+}
+
+// Cloudflare Sandbox interface - matches the return type of getSandbox()
+interface CloudflareSandbox {
+  exec(command: string): Promise<CloudflareExecResult>;
+  writeFile(path: string, content: string): Promise<unknown>;
+}
+
 export class Sandbox {
-  private sandbox: SandboxInstance;
+  private sandbox: CloudflareSandbox;
 
-  private constructor(sandbox: SandboxInstance) {
-    this.sandbox = sandbox;
+  constructor(sandbox: {
+    exec: (command: string) => Promise<CloudflareExecResult>;
+    writeFile: (path: string, content: string) => Promise<unknown>;
+  }) {
+    // Cast to our interface to handle type compatibility between different @cloudflare/sandbox versions
+    this.sandbox = sandbox as unknown as CloudflareSandbox;
   }
 
-  static async create(
-    language: string,
-    config: SandboxConfig
-  ): Promise<Sandbox> {
-    const daytona = new Daytona({ apiKey: config.apiKey });
-    const sandboxInstance = await daytona.create({ language });
-    return new Sandbox(sandboxInstance);
-  }
-
-  async run(
-    code: string
-  ): Promise<Awaited<ReturnType<SandboxInstance["process"]["codeRun"]>>> {
-    const result = await this.sandbox.process.codeRun(code);
-    return result;
+  async run(code: string): Promise<{ exitCode: number }> {
+    // For JavaScript/TypeScript, use bun -e to execute code
+    // Escape the code properly for shell execution
+    const escapedCode = code.replace(/'/g, "'\\''");
+    const result = await this.sandbox.exec(`bun -e '${escapedCode}'`);
+    return {
+      exitCode: result.exitCode,
+    };
   }
 
   async kill() {
-    await this.sandbox.stop();
-    await this.sandbox.delete();
+    // Cloudflare Sandbox manages its own lifecycle, so this is a no-op
+    // The sandbox persists across requests based on the sessionId
   }
 
-  async readFile(filename: string) {
-    const file = await this.sandbox.fs.downloadFile(filename);
-    return file.toString();
+  async readFile(filename: string): Promise<string> {
+    // Use cat command to read file contents
+    const result = await this.sandbox.exec(`cat ${filename}`);
+    if (!result.success || result.exitCode !== 0) {
+      throw new Error(
+        `Failed to read file ${filename}: ${result.stderr || result.stdout}`
+      );
+    }
+    return result.stdout;
   }
 
   async uploadFile(content: Buffer, remotePath: string): Promise<void> {
-    await this.sandbox.fs.uploadFile(content, remotePath);
+    // Convert Buffer to string and write to file
+    const contentString = content.toString("utf-8");
+    await this.sandbox.writeFile(remotePath, contentString);
   }
 
   async executeCommand(
@@ -50,15 +68,12 @@ export class Sandbox {
     cwd?: string,
     timeout?: number
   ): Promise<ExecuteCommandResult> {
-    const result = await this.sandbox.process.executeCommand(
-      command,
-      cwd,
-      undefined,
-      timeout
-    );
+    // Build command with cwd if specified
+    const fullCommand = cwd ? `cd ${cwd} && ${command}` : command;
+    const result = await this.sandbox.exec(fullCommand);
     return {
       exitCode: result.exitCode,
-      stdout: result.result ?? "",
+      stdout: result.stdout,
     };
   }
 }

@@ -1,12 +1,10 @@
 import { Sandbox } from "./sandbox";
-import { DEFAULT_LANGUAGE } from "./constants";
 import { getSolution } from "./generate-solution";
 import { getProblem, updateTestCase, type TestCase } from "@repo/db";
-import type { SandboxConfig } from "./types";
 
 export async function generateTestCaseOutputs(
   problemId: string,
-  sandboxConfig: SandboxConfig
+  sandbox: Sandbox
 ) {
   const solution = await getSolution(problemId);
   const { testCases } = await getProblem(problemId);
@@ -15,7 +13,6 @@ export async function generateTestCaseOutputs(
       "No test cases found. Please generate test case descriptions and inputs first."
     );
   }
-  const sandbox = await Sandbox.create(DEFAULT_LANGUAGE, sandboxConfig);
 
   const results: unknown[] = [];
   for (const testCase of testCases) {

@@ -1,14 +1,14 @@
 import { Sandbox } from "./sandbox";
 import { getProblem } from "@repo/db";
 import { getLanguageConfig, getRunnerTemplate } from "./runners";
-import type { TestResult, SandboxConfig, SupportedLanguage } from "./types";
+import type { TestResult, SupportedLanguage } from "./types";
 
-const WORK_DIR = "/home/daytona";
+const WORK_DIR = ".";
 
 export async function runUserSolution(
   problemId: string,
   userCode: string,
-  sandboxConfig: SandboxConfig,
+  sandbox: Sandbox,
   language: SupportedLanguage = "typescript"
 ): Promise<TestResult[]> {
   const { testCases } = await getProblem(problemId);
@@ -38,7 +38,6 @@ export async function runUserSolution(
   const config = getLanguageConfig(language);
   const runnerTemplate = getRunnerTemplate(language);
 
-  const sandbox = await Sandbox.create(config.sandboxLanguage, sandboxConfig);
   const results: TestResult[] = [];
 
   const solutionPath = `${WORK_DIR}/solution.${config.extension}`;

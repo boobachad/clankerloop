@@ -1,11 +1,9 @@
 import { Sandbox } from "./sandbox";
-import { DEFAULT_LANGUAGE } from "./constants";
 import { getProblem, updateTestCase, type TestCase } from "@repo/db";
-import type { SandboxConfig } from "./types";
 
 export async function generateTestCaseInputs(
   problemId: string,
-  sandboxConfig: SandboxConfig
+  sandbox: Sandbox
 ) {
   const { testCases } = await getProblem(problemId);
   if (!testCases) {
@@ -15,7 +13,6 @@ export async function generateTestCaseInputs(
         ". You must generate the code first."
     );
   }
-  const sandbox = await Sandbox.create(DEFAULT_LANGUAGE, sandboxConfig);
 
   const results: unknown[] = [];
   for (const testCase of testCases) {
@@ -24,9 +21,9 @@ export async function generateTestCaseInputs(
         "; const output = generateTestInput();" +
         "require('fs').writeFileSync('output.json', JSON.stringify(output));"
     );
-    if (result.exitCode !== 1) {
+    if (result.exitCode !== 0) {
       throw new Error(
-        `Failed to generate test case input for test case ${testCase.id}: ${JSON.stringify(result)}`
+        `Failed to generate test case input for test case ${testCase.id}: exitCode ${result.exitCode}`
       );
     }
     console.log("Result of running sandbox code:", result);
