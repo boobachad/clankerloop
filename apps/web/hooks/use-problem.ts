@@ -1,22 +1,30 @@
 "use client";
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { generateProblemText, getProblemText } from "@/app/problem/[problemId]/actions/generate-problem-text";
-import { generateTestCases, getTestCases } from "@/app/problem/[problemId]/actions/generate-test-cases";
+import {
+  generateProblemText,
+  getProblemText,
+} from "@/actions/generate-problem-text";
+import { generateTestCases, getTestCases } from "@/actions/generate-test-cases";
 import {
   generateTestCaseInputCode,
   getTestCaseInputCode,
-} from "@/app/problem/[problemId]/actions/generate-test-case-input-code";
+} from "@/actions/generate-test-case-input-code";
 import {
   generateTestCaseInputs,
   getTestCaseInputs,
-} from "@/app/problem/[problemId]/actions/generate-test-case-inputs";
-import { generateSolution, getSolution } from "@/app/problem/[problemId]/actions/generate-solution";
+} from "@/actions/generate-test-case-inputs";
+import { generateSolution, getSolution } from "@/actions/generate-solution";
 import {
   generateTestCaseOutputs,
   getTestCaseOutputs,
-} from "@/app/problem/[problemId]/actions/generate-test-case-outputs";
-import { runUserSolution } from "@/app/problem/[problemId]/actions/run-user-solution";
+} from "@/actions/generate-test-case-outputs";
+import { runUserSolution } from "@/actions/run-user-solution";
+import {
+  getGenerationStatus,
+  type GenerationStatus,
+  type GenerationStep,
+} from "@/actions/generation-status";
 
 export function useProblemText(
   problemId: string | null,
@@ -317,3 +325,36 @@ export function useRunUserSolution(
   };
 }
 
+export function useGenerationStatus(
+  problemId: string | null,
+  encryptedUserId?: string
+) {
+  const query = useQuery({
+    queryKey: ["generationStatus", problemId],
+    queryFn: () => {
+      if (!problemId) throw new Error("Problem ID is not set");
+      return getGenerationStatus(problemId, encryptedUserId);
+    },
+    enabled: !!problemId,
+    staleTime: 0,
+    refetchInterval: (query) => {
+      const status = query.state.data?.status;
+      if (status === "pending" || status === "in_progress") {
+        return 2000;
+      }
+      return false;
+    },
+  });
+
+  return {
+    data: query.data,
+    completedSteps: (query.data?.completedSteps ?? []) as GenerationStep[],
+    isGenerating:
+      query.data?.status === "pending" || query.data?.status === "in_progress",
+    isComplete: query.data?.status === "completed",
+    isFailed: query.data?.status === "failed",
+    error: query.data?.error,
+  };
+}
+
+export type { GenerationStep };

@@ -19,6 +19,7 @@ import {
   useSolution,
   useTestCaseOutputs,
   useRunUserSolution,
+  useGenerationStatus,
 } from "@/hooks/use-problem";
 import { Skeleton } from "@/components/ui/skeleton";
 import Link from "next/link";
@@ -56,7 +57,7 @@ export default function ProblemRender({
   }, [getProblemText, problemText]);
 
   useEffect(() => {
-    if (problemText) {
+    if (problemText?.problemText && problemText?.functionSignature) {
       setUserSolution(getStartingCode(language, problemText.functionSignature));
     }
   }, [problemText, language]);
@@ -108,11 +109,70 @@ export default function ProblemRender({
     runData: callRunUserSolution,
   } = useRunUserSolution(problemId, userSolution, user.apiKey);
 
+  const {
+    completedSteps,
+    isGenerating,
+    isComplete,
+    isFailed,
+    error: generationError,
+  } = useGenerationStatus(problemId, user.apiKey);
+
+  // Auto-fetch data as each step completes or while generation is in progress
   useEffect(() => {
-    if (solution) {
-      setUserSolution(solution);
+    const hasProblemText =
+      problemText?.problemText && problemText?.functionSignature;
+    const isGeneratingProblemText =
+      isGenerating && !completedSteps.includes("generateProblemText");
+
+    if (completedSteps.includes("generateProblemText") && !hasProblemText) {
+      getProblemText();
+    } else if (isGeneratingProblemText && !hasProblemText) {
+      // Poll while generation is in progress
+      const interval = setInterval(() => {
+        getProblemText();
+      }, 2000);
+      return () => clearInterval(interval);
     }
-  }, [solution]);
+  }, [completedSteps, problemText, isGenerating, getProblemText]);
+
+  useEffect(() => {
+    if (completedSteps.includes("generateTestCases") && !testCases) {
+      getTestCases();
+    }
+  }, [completedSteps, testCases, getTestCases]);
+
+  useEffect(() => {
+    if (
+      completedSteps.includes("generateTestCaseInputCode") &&
+      !testCaseInputCode
+    ) {
+      getCodeToGenerateTestCaseInputs();
+    }
+  }, [completedSteps, testCaseInputCode, getCodeToGenerateTestCaseInputs]);
+
+  useEffect(() => {
+    if (completedSteps.includes("generateTestCaseInputs") && !testCaseInputs) {
+      getTestCaseInputs();
+    }
+  }, [completedSteps, testCaseInputs, getTestCaseInputs]);
+
+  useEffect(() => {
+    if (completedSteps.includes("generateSolution") && !solution) {
+      getSolution();
+    }
+  }, [completedSteps, solution, getSolution]);
+
+  useEffect(() => {
+    if (
+      completedSteps.includes("generateTestCaseOutputs") &&
+      !testCaseOutputs
+    ) {
+      getTestCaseOutputs();
+    }
+  }, [completedSteps, testCaseOutputs, getTestCaseOutputs]);
+
+  // Helper to determine if buttons should be shown for a step
+  const showButtons = !isGenerating || isComplete || isFailed;
 
   return (
     <div className="h-screen w-screen flex flex-col overflow-hidden">
@@ -159,56 +219,79 @@ export default function ProblemRender({
         <ResizablePanel defaultSize={20} className="min-h-0">
           <div className="h-full overflow-auto p-4 flex flex-col gap-4">
             <div>Problem: {problemId}</div>
-            <div>User: {JSON.stringify(user)}</div>
+            {isFailed && generationError && (
+              <Alert variant="destructive">
+                <AlertTitle>Generation Failed</AlertTitle>
+                <AlertDescription>{generationError}</AlertDescription>
+              </Alert>
+            )}
             <div>
-              {!problemText && (
+              {showButtons && (
                 <>
                   <Button
                     variant={"outline"}
                     onClick={() => callGenerateProblemText()}
                   >
-                    Generate Problem Text
+                    {problemText ? "Re-generate" : "Generate"} Problem Text
                   </Button>
                   <Button variant={"outline"} onClick={() => getProblemText()}>
-                    Get Problem Text
+                    Re-fetch Problem Text
                   </Button>
                 </>
               )}
-              {isProblemTextLoading ? (
-                <Loader />
-              ) : (
-                <>
-                  {problemTextError && (
-                    <Alert variant="destructive" className="mb-4">
-                      <AlertTitle>Error</AlertTitle>
-                      <AlertDescription>
-                        {problemTextError instanceof Error
-                          ? problemTextError.message
-                          : String(problemTextError)}
-                      </AlertDescription>
-                    </Alert>
-                  )}
-                  {problemText && (
-                    <>
+              {(() => {
+                const hasProblemText =
+                  problemText?.problemText && problemText?.functionSignature;
+                const isGeneratingProblemText =
+                  isGenerating &&
+                  !completedSteps.includes("generateProblemText");
+                const shouldShowLoader =
+                  isProblemTextLoading ||
+                  (isGeneratingProblemText && !hasProblemText) ||
+                  (!hasProblemText && !problemTextError);
+
+                return shouldShowLoader ? (
+                  <Loader />
+                ) : (
+                  <>
+                    {problemTextError && (
+                      <Alert variant="destructive" className="mb-4">
+                        <AlertTitle>Error</AlertTitle>
+                        <AlertDescription>
+                          {problemTextError instanceof Error
+                            ? problemTextError.message
+                            : String(problemTextError)}
+                        </AlertDescription>
+                      </Alert>
+                    )}
+                    {hasProblemText && (
                       <MessageResponse>
                         {problemText.problemText}
                       </MessageResponse>
-                    </>
-                  )}
-                </>
-              )}
+                    )}
+                  </>
+                );
+              })()}
             </div>
             <div>
-              <Button
-                variant={"outline"}
-                onClick={() => callGenerateTestCases()}
-              >
-                Generate Test Case Descriptions
-              </Button>
-              <Button variant={"outline"} onClick={() => getTestCases()}>
-                Get Test Case Descriptions
-              </Button>
-              {isTestCasesLoading ? (
+              {showButtons && (
+                <>
+                  <Button
+                    variant={"outline"}
+                    onClick={() => callGenerateTestCases()}
+                  >
+                    {testCases ? "Re-generate" : "Generate"} Test Case
+                    Descriptions
+                  </Button>
+                  <Button variant={"outline"} onClick={() => getTestCases()}>
+                    Re-fetch Test Case Descriptions
+                  </Button>
+                </>
+              )}
+              {isTestCasesLoading ||
+              (isGenerating &&
+                !completedSteps.includes("generateTestCases") &&
+                !testCases) ? (
                 <Loader />
               ) : (
                 <>
@@ -236,19 +319,27 @@ export default function ProblemRender({
               )}
             </div>
             <div>
-              <Button
-                variant={"outline"}
-                onClick={() => callGenerateTestCaseInputCode()}
-              >
-                Generate Test Case Inputs
-              </Button>
-              <Button
-                variant={"outline"}
-                onClick={() => getCodeToGenerateTestCaseInputs()}
-              >
-                Get Test Case Inputs
-              </Button>
-              {isTestCaseInputsLoading ? (
+              {showButtons && (
+                <>
+                  <Button
+                    variant={"outline"}
+                    onClick={() => callGenerateTestCaseInputCode()}
+                  >
+                    {testCaseInputCode ? "Re-generate" : "Generate"} Test Case
+                    Input Code
+                  </Button>
+                  <Button
+                    variant={"outline"}
+                    onClick={() => getCodeToGenerateTestCaseInputs()}
+                  >
+                    Re-fetch Test Case Input Code
+                  </Button>
+                </>
+              )}
+              {isTestCaseInputsLoading ||
+              (isGenerating &&
+                !completedSteps.includes("generateTestCaseInputCode") &&
+                !testCaseInputCode) ? (
                 <Loader />
               ) : (
                 <>
@@ -273,16 +364,26 @@ export default function ProblemRender({
               )}
             </div>
             <div>
-              <Button
-                variant={"outline"}
-                onClick={() => callGenerateTestCaseInputs()}
-              >
-                Run Generate Input
-              </Button>
-              <Button variant={"outline"} onClick={() => getTestCaseInputs()}>
-                Get Test Case Inputs
-              </Button>
-              {isGenerateTestCaseInputsLoading ? (
+              {showButtons && (
+                <>
+                  <Button
+                    variant={"outline"}
+                    onClick={() => callGenerateTestCaseInputs()}
+                  >
+                    {testCaseInputs ? "Re-run" : "Run"} Generate Input
+                  </Button>
+                  <Button
+                    variant={"outline"}
+                    onClick={() => getTestCaseInputs()}
+                  >
+                    Re-fetch Test Case Inputs
+                  </Button>
+                </>
+              )}
+              {isGenerateTestCaseInputsLoading ||
+              (isGenerating &&
+                !completedSteps.includes("generateTestCaseInputs") &&
+                !testCaseInputs) ? (
                 <Loader />
               ) : (
                 <>
@@ -309,16 +410,23 @@ export default function ProblemRender({
               )}
             </div>
             <div>
-              <Button
-                variant={"outline"}
-                onClick={() => callGenerateSolution()}
-              >
-                Generate Solution
-              </Button>
-              <Button variant={"outline"} onClick={() => getSolution()}>
-                Get Solution
-              </Button>
-              {isGenerateSolutionLoading ? (
+              {showButtons && (
+                <>
+                  <Button
+                    variant={"outline"}
+                    onClick={() => callGenerateSolution()}
+                  >
+                    {solution ? "Re-generate" : "Generate"} Solution
+                  </Button>
+                  <Button variant={"outline"} onClick={() => getSolution()}>
+                    Re-fetch Solution
+                  </Button>
+                </>
+              )}
+              {isGenerateSolutionLoading ||
+              (isGenerating &&
+                !completedSteps.includes("generateSolution") &&
+                !solution) ? (
                 <Loader />
               ) : (
                 <>
@@ -337,16 +445,27 @@ export default function ProblemRender({
               )}
             </div>
             <div>
-              <Button
-                variant={"outline"}
-                onClick={() => callGenerateTestCaseOutputs()}
-              >
-                Generate Test Case Outputs
-              </Button>
-              <Button variant={"outline"} onClick={() => getTestCaseOutputs()}>
-                Get Test Case Outputs
-              </Button>
-              {isGenerateTestCaseOutputsLoading ? (
+              {showButtons && (
+                <>
+                  <Button
+                    variant={"outline"}
+                    onClick={() => callGenerateTestCaseOutputs()}
+                  >
+                    {testCaseOutputs ? "Re-generate" : "Generate"} Test Case
+                    Outputs
+                  </Button>
+                  <Button
+                    variant={"outline"}
+                    onClick={() => getTestCaseOutputs()}
+                  >
+                    Re-fetch Test Case Outputs
+                  </Button>
+                </>
+              )}
+              {isGenerateTestCaseOutputsLoading ||
+              (isGenerating &&
+                !completedSteps.includes("generateTestCaseOutputs") &&
+                !testCaseOutputs) ? (
                 <Loader />
               ) : (
                 <>
