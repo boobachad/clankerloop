@@ -28,7 +28,11 @@ app.get("/health", (c) =>
 );
 
 // API routes (auth required)
-const api = new Hono();
+const api = new Hono<{
+  Variables: {
+    userId: string;
+  };
+}>();
 api.use("*", apiKeyAuth);
 api.route("/problems", problems);
 

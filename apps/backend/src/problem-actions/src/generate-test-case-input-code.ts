@@ -1,11 +1,11 @@
 import { generateObject } from "ai";
 import { z } from "zod/v3";
-import { DEFAULT_LANGUAGE, DEFAULT_MODEL } from "./constants";
+import { DEFAULT_LANGUAGE } from "./constants";
 import { getProblem, updateTestCase, type TestCase } from "@repo/db";
 
 export async function generateTestCaseInputCode(
   problemId: string,
-  model: string = DEFAULT_MODEL
+  model: string
 ) {
   const { problemText, functionSignature, testCases } =
     await getProblem(problemId);

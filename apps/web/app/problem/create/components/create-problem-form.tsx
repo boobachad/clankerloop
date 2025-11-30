@@ -16,8 +16,6 @@ import { listModels } from "@/actions/list-models";
 import { createModel } from "@/actions/create-model";
 import { createProblem } from "@/actions/create-problem";
 
-const DEFAULT_MODEL = "google/gemini-2.5-flash";
-
 interface CreateProblemFormProps {
   encryptedUserId: string;
 }
@@ -26,9 +24,7 @@ export default function CreateProblemForm({
   encryptedUserId,
 }: CreateProblemFormProps) {
   const router = useRouter();
-  const [models, setModels] = useState<Array<{ id: string; name: string }>>(
-    []
-  );
+  const [models, setModels] = useState<Array<{ id: string; name: string }>>([]);
   const [selectedModel, setSelectedModel] = useState<string>("");
   const [newModelName, setNewModelName] = useState<string>("");
   const [isCreating, setIsCreating] = useState(false);
@@ -38,15 +34,13 @@ export default function CreateProblemForm({
     async function loadModels() {
       try {
         const modelsList = await listModels(encryptedUserId);
-        setModels(modelsList);
-        if (modelsList.length > 0) {
-          setSelectedModel(modelsList[0].name);
-        } else {
-          setSelectedModel(DEFAULT_MODEL);
+        if (!modelsList || modelsList.length === 0 || !modelsList[0]) {
+          throw new Error("No models found. Please create a model first.");
         }
+        setModels(modelsList);
+        setSelectedModel(modelsList[0].name);
       } catch (error) {
         console.error("Failed to load models:", error);
-        setSelectedModel(DEFAULT_MODEL);
       } finally {
         setIsLoadingModels(false);
       }
@@ -56,15 +50,25 @@ export default function CreateProblemForm({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    // Determine which model to use
+    let modelToUse = newModelName.trim() || selectedModel;
+
+    if (!modelToUse) {
+      alert("Please select a model or enter a new model name.");
+      return;
+    }
+
     setIsCreating(true);
 
     try {
-      let modelToUse = selectedModel;
-
       // If a new model name is provided, create it first
       if (newModelName.trim()) {
         try {
-          const newModel = await createModel(newModelName.trim(), encryptedUserId);
+          const newModel = await createModel(
+            newModelName.trim(),
+            encryptedUserId
+          );
           modelToUse = newModel.name;
           // Refresh models list
           const updatedModels = await listModels(encryptedUserId);
@@ -95,7 +99,9 @@ export default function CreateProblemForm({
         <div className="space-y-2">
           <Label htmlFor="model-select">Select Model</Label>
           {isLoadingModels ? (
-            <div className="text-sm text-muted-foreground">Loading models...</div>
+            <div className="text-sm text-muted-foreground">
+              Loading models...
+            </div>
           ) : (
             <Select
               value={selectedModel}
@@ -127,15 +133,22 @@ export default function CreateProblemForm({
             disabled={isCreating}
           />
           <p className="text-sm text-muted-foreground">
-            If you enter a new model name, it will be created and used for this problem.
+            If you enter a new model name, it will be created and used for this
+            problem.
           </p>
         </div>
 
-        <Button type="submit" disabled={isCreating || isLoadingModels}>
+        <Button
+          type="submit"
+          disabled={
+            isCreating ||
+            isLoadingModels ||
+            (!selectedModel && !newModelName.trim())
+          }
+        >
           {isCreating ? "Creating..." : "Create Problem"}
         </Button>
       </form>
     </div>
   );
 }
-

@@ -65,8 +65,12 @@ async function executeStep(
   step: GenerationStep,
   problemId: string,
   env: Env,
-  model?: string
+  model: string
 ): Promise<void> {
+  if (!model) {
+    throw new Error("Model is required for generation steps");
+  }
+
   const getSandboxInstance = (id: string): Sandbox => {
     const cloudflareSandbox = getSandbox(env.Sandbox, id);
     return new Sandbox(cloudflareSandbox);

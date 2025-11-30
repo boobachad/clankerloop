@@ -1,12 +1,8 @@
 import { generateObject } from "ai";
 import { z } from "zod/v3";
 import { getProblem, updateProblem } from "@repo/db";
-import { DEFAULT_MODEL } from "./constants";
 
-export async function generateProblemText(
-  problemId: string,
-  model: string = DEFAULT_MODEL
-) {
+export async function generateProblemText(problemId: string, model: string) {
   const { object } = await generateObject({
     model,
     prompt: `Generate a coding problem for a LeetCode-style platform. ONLY return the problem text, no other text.

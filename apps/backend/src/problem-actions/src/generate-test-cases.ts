@@ -1,12 +1,8 @@
 import { generateObject } from "ai";
 import { z } from "zod/v3";
 import { getProblem, replaceTestCases } from "@repo/db";
-import { DEFAULT_MODEL } from "./constants";
 
-export async function generateTestCases(
-  problemId: string,
-  model: string = DEFAULT_MODEL
-) {
+export async function generateTestCases(problemId: string, model: string) {
   const { problemText } = await getProblem(problemId);
   const { object } = await generateObject({
     model,
