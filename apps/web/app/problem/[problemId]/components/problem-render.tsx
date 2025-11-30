@@ -21,6 +21,8 @@ import {
   useRunUserSolution,
 } from "@/hooks/use-problem";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useRouter } from "next/navigation";
+import Link from "next/link";
 
 function getStartingCode(language: string, functionSignature: string) {
   if (language === "typescript") {
@@ -106,9 +108,22 @@ export default function ProblemRender({ problemId }: { problemId: string }) {
 
   return (
     <div className="h-screen w-screen">
+      <div className="w-full p-4 flex items-center gap-4 border-b">
+        <h1
+          className="text-xl font-bold"
+          style={{ fontFamily: "var(--font-comic-relief)" }}
+        >
+          ClankerRank
+        </h1>
+        <Link href="/">
+          <Button variant={"outline"} className="hover:cursor-pointer">
+            Problems
+          </Button>
+        </Link>
+      </div>
       <ResizablePanelGroup direction="horizontal" className="h-full w-full">
         <ResizablePanel defaultSize={20} className="h-full">
-          <div className="h-full overflow-auto">
+          <div className="h-full overflow-auto p-4 flex flex-col gap-4">
             <div>Problem: {problemId}</div>
             <div>
               {!problemText && (
@@ -362,7 +377,7 @@ export default function ProblemRender({ problemId }: { problemId: string }) {
           </div>
         </ResizablePanel>
         <ResizableHandle withHandle />
-        <ResizablePanel defaultSize={50}>
+        <ResizablePanel defaultSize={50} className="py-4">
           {userSolution ? (
             <Editor
               height="100%"

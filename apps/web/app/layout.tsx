@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import localFont from "next/font/local";
 import "./globals.css";
 import { QueryClientProviderWrapper } from "./providers";
+import { Comic_Relief } from "next/font/google";
 
 const geistSans = localFont({
   src: "./fonts/GeistVF.woff",
@@ -10,6 +11,12 @@ const geistSans = localFont({
 const geistMono = localFont({
   src: "./fonts/GeistMonoVF.woff",
   variable: "--font-geist-mono",
+});
+
+const comicRelief = Comic_Relief({
+  weight: "700",
+  subsets: ["latin"],
+  variable: "--font-comic-relief",
 });
 
 export const metadata: Metadata = {
@@ -24,7 +31,9 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={`${geistSans.variable} ${geistMono.variable}`}>
+      <body
+        className={`${geistSans.variable} ${geistMono.variable} ${comicRelief.variable}`}
+      >
         <QueryClientProviderWrapper>{children}</QueryClientProviderWrapper>
       </body>
     </html>
