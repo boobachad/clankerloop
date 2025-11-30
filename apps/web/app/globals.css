@@ -118,4 +118,7 @@
   body {
     @apply bg-background text-foreground;
   }
+  .font-comic {
+    font-family: var(--font-comic-relief);
+  }
 }
