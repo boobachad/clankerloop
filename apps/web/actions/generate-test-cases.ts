@@ -1,22 +1,25 @@
-import { backendGet, backendPost } from "@/lib/backend-client";
+import { apiGet, apiPost } from "@/lib/api-client";
+import type { TestCase, TestCaseDescription } from "@repo/api-types";
+
+interface TestCasesGenerateResponse {
+  testCases: TestCaseDescription[];
+  jobId: string | null;
+}
 
 export async function generateTestCases(
   problemId: string,
-  encryptedUserId?: string
+  model: string,
+  encryptedUserId?: string,
+  enqueueNextStep: boolean = true
 ) {
-  return backendPost<{ description: string; isEdgeCase: boolean }[]>(
-    `/problems/${problemId}/test-cases/generate`,
-    undefined,
+  const data = await apiPost<TestCasesGenerateResponse>(
+    `/${problemId}/test-cases/generate`,
+    { model, enqueueNextStep },
     encryptedUserId
   );
+  return data.testCases;
 }
 
-export async function getTestCases(
-  problemId: string,
-  encryptedUserId?: string
-) {
-  return backendGet<{ description: string; isEdgeCase: boolean }[]>(
-    `/problems/${problemId}/test-cases`,
-    encryptedUserId
-  );
+export async function getTestCases(problemId: string, encryptedUserId?: string) {
+  return apiGet<TestCase[]>(`/${problemId}/test-cases`, encryptedUserId);
 }

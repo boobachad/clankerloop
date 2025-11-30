@@ -1,22 +1,24 @@
-import { backendGet, backendPost } from "@/lib/backend-client";
+import { apiGet, apiPost } from "@/lib/api-client";
+
+interface InputCodeGenerateResponse {
+  inputCodes: string[];
+  jobId: string | null;
+}
 
 export async function generateTestCaseInputCode(
   problemId: string,
-  encryptedUserId?: string
+  model: string,
+  encryptedUserId?: string,
+  enqueueNextStep: boolean = true
 ) {
-  return backendPost<string[]>(
-    `/problems/${problemId}/test-cases/input-code/generate`,
-    undefined,
+  const data = await apiPost<InputCodeGenerateResponse>(
+    `/${problemId}/test-cases/input-code/generate`,
+    { model, enqueueNextStep },
     encryptedUserId
   );
+  return data.inputCodes;
 }
 
-export async function getTestCaseInputCode(
-  problemId: string,
-  encryptedUserId?: string
-) {
-  return backendGet<string[]>(
-    `/problems/${problemId}/test-cases/input-code`,
-    encryptedUserId
-  );
+export async function getTestCaseInputCode(problemId: string, encryptedUserId?: string) {
+  return apiGet<string[] | null>(`/${problemId}/test-cases/input-code`, encryptedUserId);
 }

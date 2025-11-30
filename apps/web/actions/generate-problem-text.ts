@@ -1,22 +1,24 @@
-import { backendGet, backendPost } from "@/lib/backend-client";
+import { apiGet, apiPost } from "@/lib/api-client";
+import type { ProblemText } from "@repo/api-types";
+
+interface ProblemTextGenerateResponse extends ProblemText {
+  jobId: string | null;
+}
 
 export async function generateProblemText(
   problemId: string,
-  encryptedUserId?: string
+  model: string,
+  encryptedUserId?: string,
+  enqueueNextStep: boolean = true
 ) {
-  return backendPost<{ problemText: string; functionSignature: string }>(
-    `/problems/${problemId}/text/generate`,
-    undefined,
+  const data = await apiPost<ProblemTextGenerateResponse>(
+    `/${problemId}/text/generate`,
+    { model, enqueueNextStep },
     encryptedUserId
   );
+  return { problemText: data.problemText, functionSignature: data.functionSignature };
 }
 
-export async function getProblemText(
-  problemId: string,
-  encryptedUserId?: string
-) {
-  return backendGet<{ problemText: string; functionSignature: string }>(
-    `/problems/${problemId}/text`,
-    encryptedUserId
-  );
+export async function getProblemText(problemId: string, encryptedUserId?: string) {
+  return apiGet<ProblemText>(`/${problemId}/text`, encryptedUserId);
 }

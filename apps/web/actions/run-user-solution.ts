@@ -1,29 +1,17 @@
-import { backendPost } from "@/lib/backend-client";
+import { apiPost } from "@/lib/api-client";
+import type { TestResult } from "@repo/api-types";
 
-export type TestCase = {
-  description: string;
-  isEdgeCase: boolean;
-  expected: unknown;
-};
-
-export type TestResult = {
-  testCase: TestCase;
-  status: "pass" | "fail" | "error";
-  actual: unknown | null;
-  error?: string;
-  stdout?: string;
-};
+// Re-export types for consumers
+export type { TestCase, TestResult } from "@repo/api-types";
 
 export async function runUserSolution(
   problemId: string,
   userCode: string,
   encryptedUserId?: string
 ): Promise<TestResult[]> {
-  return backendPost<TestResult[]>(
-    `/problems/${problemId}/solution/run`,
-    {
-      code: userCode,
-    },
+  return apiPost<TestResult[]>(
+    `/${problemId}/solution/run`,
+    { code: userCode },
     encryptedUserId
   );
 }

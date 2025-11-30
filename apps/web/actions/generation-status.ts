@@ -1,32 +1,12 @@
-import { backendGet } from "@/lib/backend-client";
+import { apiGet } from "@/lib/api-client";
+import type { GenerationStatus } from "@repo/api-types";
 
-export type GenerationStep =
-  | "generateProblemText"
-  | "generateTestCases"
-  | "generateTestCaseInputCode"
-  | "generateTestCaseInputs"
-  | "generateSolution"
-  | "generateTestCaseOutputs";
-
-export interface GenerationStatus {
-  jobId?: string;
-  status: "none" | "pending" | "in_progress" | "completed" | "failed";
-  currentStep?: GenerationStep;
-  completedSteps?: GenerationStep[];
-  progress?: {
-    completed: number;
-    total: number;
-    percent: number;
-  };
-  error?: string;
-}
+// Re-export types for consumers
+export type { GenerationStep, GenerationStatus } from "@repo/api-types";
 
 export async function getGenerationStatus(
   problemId: string,
   encryptedUserId?: string
 ): Promise<GenerationStatus> {
-  return backendGet<GenerationStatus>(
-    `/problems/${problemId}/generation-status`,
-    encryptedUserId
-  );
+  return apiGet<GenerationStatus>(`/${problemId}/generation-status`, encryptedUserId);
 }

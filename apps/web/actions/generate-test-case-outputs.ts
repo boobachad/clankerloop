@@ -1,22 +1,23 @@
-import { backendGet, backendPost } from "@/lib/backend-client";
+import { apiGet, apiPost } from "@/lib/api-client";
+
+interface TestOutputsGenerateResponse {
+  testCases: unknown[];
+  jobId: string | null;
+}
 
 export async function generateTestCaseOutputs(
   problemId: string,
-  encryptedUserId?: string
+  encryptedUserId?: string,
+  enqueueNextStep: boolean = true
 ) {
-  return backendPost<unknown[]>(
-    `/problems/${problemId}/test-cases/outputs/generate`,
-    undefined,
+  const data = await apiPost<TestOutputsGenerateResponse>(
+    `/${problemId}/test-cases/outputs/generate`,
+    { enqueueNextStep },
     encryptedUserId
   );
+  return data.testCases;
 }
 
-export async function getTestCaseOutputs(
-  problemId: string,
-  encryptedUserId?: string
-) {
-  return backendGet<unknown[]>(
-    `/problems/${problemId}/test-cases/outputs`,
-    encryptedUserId
-  );
+export async function getTestCaseOutputs(problemId: string, encryptedUserId?: string) {
+  return apiGet<unknown[]>(`/${problemId}/test-cases/outputs`, encryptedUserId);
 }

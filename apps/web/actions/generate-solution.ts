@@ -1,4 +1,10 @@
-import { backendGet, backendPost } from "@/lib/backend-client";
+import { apiGet, apiPost } from "@/lib/api-client";
+import type { Solution } from "@repo/api-types";
+
+interface SolutionGenerateResponse {
+  solution: string | null;
+  jobId: string | null;
+}
 
 export async function generateSolution(
   problemId: string,
@@ -7,14 +13,15 @@ export async function generateSolution(
   updateProblem: boolean = true,
   enqueueNextStep: boolean = true
 ) {
-  const response = await backendPost<{ solution: string; jobId: string }>(
-    `/problems/${problemId}/solution/generate`,
+  const data = await apiPost<SolutionGenerateResponse>(
+    `/${problemId}/solution/generate`,
     { model, updateProblem, enqueueNextStep },
     encryptedUserId
   );
-  return response.solution;
+  return data.solution;
 }
 
 export async function getSolution(problemId: string, encryptedUserId?: string) {
-  return backendGet<string>(`/problems/${problemId}/solution`, encryptedUserId);
+  const data = await apiGet<Solution>(`/${problemId}/solution`, encryptedUserId);
+  return data.solution;
 }

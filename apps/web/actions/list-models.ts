@@ -1,9 +1,6 @@
-import { backendGet } from "@/lib/backend-client";
+import { apiGet } from "@/lib/api-client";
+import type { Model } from "@repo/api-types";
 
 export async function listModels(encryptedUserId?: string) {
-  return backendGet<Array<{ id: string; name: string }>>(
-    "/problems/models",
-    encryptedUserId
-  );
+  return apiGet<Model[]>("/models", encryptedUserId);
 }
-

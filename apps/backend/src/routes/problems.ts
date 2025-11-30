@@ -1,5 +1,6 @@
 /// <reference path="../../worker-configuration.d.ts" />
-import { Hono, type Context } from "hono";
+import { OpenAPIHono } from "@hono/zod-openapi";
+import type { Context } from "hono";
 import {
   generateProblemText,
   getProblemText,
@@ -28,8 +29,27 @@ import {
   getProblem,
 } from "@repo/db";
 import { getNextStep, STEP_ORDER, type GenerationStep } from "../queue/types";
+import {
+  listModelsRoute,
+  createModelRoute,
+  createProblemRoute,
+  generateProblemTextRoute,
+  getProblemTextRoute,
+  generateTestCasesRoute,
+  getTestCasesRoute,
+  generateInputCodeRoute,
+  getInputCodeRoute,
+  generateInputsRoute,
+  getInputsRoute,
+  generateSolutionRoute,
+  getSolutionRoute,
+  runSolutionRoute,
+  generateOutputsRoute,
+  getOutputsRoute,
+  getGenerationStatusRoute,
+} from "./problems.routes";
 
-const problems = new Hono<{
+const problems = new OpenAPIHono<{
   Bindings: Env;
   Variables: {
     userId: string;
@@ -55,10 +75,9 @@ async function getOrCreateModel(modelName: string): Promise<string> {
 async function enqueueFirstStepIfAuto(
   c: Context<{ Bindings: Env; Variables: { userId: string } }>,
   problemId: string,
-  model?: string
+  model?: string,
+  autoGenerate: boolean = true
 ): Promise<string | null> {
-  const autoGenerate = c.req.query("autoGenerate") !== "false"; // default true
-
   if (!autoGenerate) return null;
 
   // Create job
@@ -79,16 +98,15 @@ async function enqueueFirstStepIfAuto(
   return jobId;
 }
 
-// Helper to enqueue next step if autoGenerate is enabled
-async function enqueueNextStepIfAuto(
+// Helper to enqueue next step if enqueueNextStep is enabled
+async function enqueueNextStepIfEnabled(
   c: Context<{ Bindings: Env; Variables: { userId: string } }>,
   problemId: string,
   currentStep: GenerationStep,
-  model?: string
+  model?: string,
+  enqueueNextStep: boolean = true
 ): Promise<string | null> {
-  const autoGenerate = c.req.query("autoGenerate") !== "false"; // default true
-
-  if (!autoGenerate) return null;
+  if (!enqueueNextStep) return null;
 
   // Get or create job
   let job = await getLatestJobForProblem(problemId);
@@ -121,32 +139,24 @@ async function enqueueNextStepIfAuto(
   return job.id;
 }
 
-// Models routes
-problems.get("/models", async (c) => {
+// ============== Models Routes ==============
+
+problems.openapi(listModelsRoute, async (c) => {
   const models = await listModels();
-  return c.json({ success: true, data: models });
+  return c.json({ success: true as const, data: models }, 200);
 });
 
-problems.post("/models", async (c) => {
-  const body = await c.req.json<{ name: string }>();
-  if (!body.name) {
-    return c.json(
-      {
-        success: false,
-        error: { code: "VALIDATION_ERROR", message: "name is required" },
-      },
-      400
-    );
-  }
+problems.openapi(createModelRoute, async (c) => {
+  const body = c.req.valid("json");
 
   try {
-    const modelId = await createModel(body.name);
+    await createModel(body.name);
     const model = await getModelByName(body.name);
-    return c.json({ success: true, data: model });
+    return c.json({ success: true as const, data: model! }, 200);
   } catch (error) {
     return c.json(
       {
-        success: false,
+        success: false as const,
         error: {
           code: "DUPLICATE_ERROR",
           message: "Model with this name already exists",
@@ -157,30 +167,22 @@ problems.post("/models", async (c) => {
   }
 });
 
-// Create problem
-problems.post("/", async (c) => {
+// ============== Problem Routes ==============
+
+problems.openapi(createProblemRoute, async (c) => {
   const userId = c.get("userId");
   if (!userId || typeof userId !== "string") {
     return c.json(
       {
-        success: false,
+        success: false as const,
         error: { code: "AUTH_ERROR", message: "User ID not found in context" },
       },
       500
     );
   }
 
-  const body = await c.req.json<{ model: string }>();
-
-  if (!body.model) {
-    return c.json(
-      {
-        success: false,
-        error: { code: "VALIDATION_ERROR", message: "model is required" },
-      },
-      400
-    );
-  }
+  const body = c.req.valid("json");
+  const query = c.req.valid("query");
 
   const problemId = await createProblem({ generatedByUserId: userId });
 
@@ -188,25 +190,17 @@ problems.post("/", async (c) => {
   const modelId = await getOrCreateModel(body.model);
   await updateProblem(problemId, { generatedByModelId: modelId });
 
-  const jobId = await enqueueFirstStepIfAuto(c, problemId, body.model);
+  const autoGenerate = query.autoGenerate !== "false";
+  const jobId = await enqueueFirstStepIfAuto(c, problemId, body.model, autoGenerate);
 
-  return c.json({ success: true, data: { problemId, jobId } });
+  return c.json({ success: true as const, data: { problemId, jobId } }, 200);
 });
 
-// Problem text
-problems.post("/:problemId/text/generate", async (c) => {
-  const problemId = c.req.param("problemId");
-  const body = await c.req.json<{ model: string }>();
+// ============== Problem Text Routes ==============
 
-  if (!body.model) {
-    return c.json(
-      {
-        success: false,
-        error: { code: "VALIDATION_ERROR", message: "model is required" },
-      },
-      400
-    );
-  }
+problems.openapi(generateProblemTextRoute, async (c) => {
+  const { problemId } = c.req.valid("param");
+  const body = c.req.valid("json");
 
   // Update problem with model if not set
   const problem = await getProblem(problemId);
@@ -217,36 +211,29 @@ problems.post("/:problemId/text/generate", async (c) => {
 
   const result = await generateProblemText(problemId, body.model);
 
-  const jobId = await enqueueNextStepIfAuto(
+  const enqueueNext = body.enqueueNextStep !== false;
+  const jobId = await enqueueNextStepIfEnabled(
     c,
     problemId,
     "generateProblemText",
-    body.model
+    body.model,
+    enqueueNext
   );
 
-  return c.json({ success: true, data: { ...result, jobId } });
+  return c.json({ success: true as const, data: { ...result, jobId } }, 200);
 });
 
-problems.get("/:problemId/text", async (c) => {
-  const problemId = c.req.param("problemId");
+problems.openapi(getProblemTextRoute, async (c) => {
+  const { problemId } = c.req.valid("param");
   const result = await getProblemText(problemId);
-  return c.json({ success: true, data: result });
+  return c.json({ success: true as const, data: result }, 200);
 });
 
-// Test cases
-problems.post("/:problemId/test-cases/generate", async (c) => {
-  const problemId = c.req.param("problemId");
-  const body = await c.req.json<{ model: string }>();
+// ============== Test Cases Routes ==============
 
-  if (!body.model) {
-    return c.json(
-      {
-        success: false,
-        error: { code: "VALIDATION_ERROR", message: "model is required" },
-      },
-      400
-    );
-  }
+problems.openapi(generateTestCasesRoute, async (c) => {
+  const { problemId } = c.req.valid("param");
+  const body = c.req.valid("json");
 
   // Update problem with model if not set
   const problem = await getProblem(problemId);
@@ -257,36 +244,29 @@ problems.post("/:problemId/test-cases/generate", async (c) => {
 
   const result = await generateTestCases(problemId, body.model);
 
-  const jobId = await enqueueNextStepIfAuto(
+  const enqueueNext = body.enqueueNextStep !== false;
+  const jobId = await enqueueNextStepIfEnabled(
     c,
     problemId,
     "generateTestCases",
-    body.model
+    body.model,
+    enqueueNext
   );
 
-  return c.json({ success: true, data: { ...result, jobId } });
+  return c.json({ success: true as const, data: { testCases: result, jobId } }, 200);
 });
 
-problems.get("/:problemId/test-cases", async (c) => {
-  const problemId = c.req.param("problemId");
+problems.openapi(getTestCasesRoute, async (c) => {
+  const { problemId } = c.req.valid("param");
   const result = await getTestCases(problemId);
-  return c.json({ success: true, data: result });
+  return c.json({ success: true as const, data: result }, 200);
 });
 
-// Test case input code
-problems.post("/:problemId/test-cases/input-code/generate", async (c) => {
-  const problemId = c.req.param("problemId");
-  const body = await c.req.json<{ model: string }>();
+// ============== Test Case Input Code Routes ==============
 
-  if (!body.model) {
-    return c.json(
-      {
-        success: false,
-        error: { code: "VALIDATION_ERROR", message: "model is required" },
-      },
-      400
-    );
-  }
+problems.openapi(generateInputCodeRoute, async (c) => {
+  const { problemId } = c.req.valid("param");
+  const body = c.req.valid("json");
 
   // Update problem with model if not set
   const problem = await getProblem(problemId);
@@ -297,62 +277,57 @@ problems.post("/:problemId/test-cases/input-code/generate", async (c) => {
 
   const result = await generateTestCaseInputCode(problemId, body.model);
 
-  const jobId = await enqueueNextStepIfAuto(
+  const enqueueNext = body.enqueueNextStep !== false;
+  const jobId = await enqueueNextStepIfEnabled(
     c,
     problemId,
     "generateTestCaseInputCode",
-    body.model
+    body.model,
+    enqueueNext
   );
 
-  return c.json({ success: true, data: { ...result, jobId } });
+  return c.json({ success: true as const, data: { inputCodes: result, jobId } }, 200);
 });
 
-problems.get("/:problemId/test-cases/input-code", async (c) => {
-  const problemId = c.req.param("problemId");
+problems.openapi(getInputCodeRoute, async (c) => {
+  const { problemId } = c.req.valid("param");
   const result = await getTestCaseInputCode(problemId);
-  return c.json({ success: true, data: result });
+  return c.json({ success: true as const, data: result }, 200);
 });
 
-// Test case inputs
-problems.post("/:problemId/test-cases/inputs/generate", async (c) => {
-  const problemId = c.req.param("problemId");
+// ============== Test Case Inputs Routes ==============
+
+problems.openapi(generateInputsRoute, async (c) => {
+  const { problemId } = c.req.valid("param");
+  const body = c.req.valid("json");
+
   const sandboxId = `test-inputs-${problemId}`;
   const sandbox = getSandboxInstance(c.env, sandboxId);
   const result = await generateTestCaseInputs(problemId, sandbox);
 
-  const jobId = await enqueueNextStepIfAuto(
+  const enqueueNext = body?.enqueueNextStep !== false;
+  const jobId = await enqueueNextStepIfEnabled(
     c,
     problemId,
-    "generateTestCaseInputs"
+    "generateTestCaseInputs",
+    body?.model,
+    enqueueNext
   );
 
-  return c.json({ success: true, data: { result, jobId } });
+  return c.json({ success: true as const, data: { testCases: result, jobId } }, 200);
 });
 
-problems.get("/:problemId/test-cases/inputs", async (c) => {
-  const problemId = c.req.param("problemId");
+problems.openapi(getInputsRoute, async (c) => {
+  const { problemId } = c.req.valid("param");
   const result = await getTestCaseInputs(problemId);
-  return c.json({ success: true, data: result });
+  return c.json({ success: true as const, data: result }, 200);
 });
 
-// Solution
-problems.post("/:problemId/solution/generate", async (c) => {
-  const problemId = c.req.param("problemId");
-  const body = await c.req.json<{
-    model: string;
-    updateProblem?: boolean;
-    enqueueNextStep?: boolean;
-  }>();
+// ============== Solution Routes ==============
 
-  if (!body.model) {
-    return c.json(
-      {
-        success: false,
-        error: { code: "VALIDATION_ERROR", message: "model is required" },
-      },
-      400
-    );
-  }
+problems.openapi(generateSolutionRoute, async (c) => {
+  const { problemId } = c.req.valid("param");
+  const body = c.req.valid("json");
 
   // Update problem with model if not set
   const problem = await getProblem(problemId);
@@ -361,107 +336,96 @@ problems.post("/:problemId/solution/generate", async (c) => {
     await updateProblem(problemId, { generatedByModelId: modelId });
   }
 
-  const updateProblemInDb = body.updateProblem !== false; // default true
-  const result = await generateSolution(
-    problemId,
-    body.model,
-    updateProblemInDb
-  );
+  const updateProblemInDb = body.updateProblem !== false;
+  const result = await generateSolution(problemId, body.model, updateProblemInDb);
 
-  let jobId: string | null = null;
-  const shouldEnqueue = body.enqueueNextStep !== false; // default true
-  if (shouldEnqueue) {
-    jobId = await enqueueNextStepIfAuto(
-      c,
-      problemId,
-      "generateSolution",
-      body.model
-    );
-  }
-
-  return c.json({ success: true, data: { solution: result, jobId } });
-});
-
-problems.get("/:problemId/solution", async (c) => {
-  const problemId = c.req.param("problemId");
-  const result = await getSolution(problemId);
-  return c.json({ success: true, data: result });
-});
-
-// Test case outputs
-problems.post("/:problemId/test-cases/outputs/generate", async (c) => {
-  const problemId = c.req.param("problemId");
-  const sandboxId = `test-outputs-${problemId}`;
-  const sandbox = getSandboxInstance(c.env, sandboxId);
-  const result = await generateTestCaseOutputs(problemId, sandbox);
-
-  // This is the last step, no need to enqueue anything
-  const jobId = await enqueueNextStepIfAuto(
+  const enqueueNext = body.enqueueNextStep !== false;
+  const jobId = await enqueueNextStepIfEnabled(
     c,
     problemId,
-    "generateTestCaseOutputs"
+    "generateSolution",
+    body.model,
+    enqueueNext
   );
 
-  return c.json({ success: true, data: { result, jobId } });
+  return c.json({ success: true as const, data: { solution: result, jobId } }, 200);
 });
 
-problems.get("/:problemId/test-cases/outputs", async (c) => {
-  const problemId = c.req.param("problemId");
-  const result = await getTestCaseOutputs(problemId);
-  return c.json({ success: true, data: result });
+problems.openapi(getSolutionRoute, async (c) => {
+  const { problemId } = c.req.valid("param");
+  const result = await getSolution(problemId);
+  return c.json({ success: true as const, data: { solution: result } }, 200);
 });
 
-// Run user solution
-problems.post("/:problemId/solution/run", async (c) => {
-  const problemId = c.req.param("problemId");
-  const body = await c.req.json<{ code: string }>();
-
-  if (!body.code) {
-    return c.json(
-      {
-        success: false,
-        error: { code: "VALIDATION_ERROR", message: "code is required" },
-      },
-      400
-    );
-  }
+problems.openapi(runSolutionRoute, async (c) => {
+  const { problemId } = c.req.valid("param");
+  const body = c.req.valid("json");
 
   const sandboxId = `solution-run-${problemId}`;
   const sandbox = getSandboxInstance(c.env, sandboxId);
   const result = await runUserSolution(problemId, body.code, sandbox);
-  return c.json({ success: true, data: result });
+  return c.json({ success: true as const, data: result }, 200);
 });
 
-// Generation status
-problems.get("/:problemId/generation-status", async (c) => {
-  const problemId = c.req.param("problemId");
+// ============== Test Outputs Routes ==============
+
+problems.openapi(generateOutputsRoute, async (c) => {
+  const { problemId } = c.req.valid("param");
+  const body = c.req.valid("json");
+
+  const sandboxId = `test-outputs-${problemId}`;
+  const sandbox = getSandboxInstance(c.env, sandboxId);
+  const result = await generateTestCaseOutputs(problemId, sandbox);
+
+  const enqueueNext = body?.enqueueNextStep !== false;
+  const jobId = await enqueueNextStepIfEnabled(
+    c,
+    problemId,
+    "generateTestCaseOutputs",
+    body?.model,
+    enqueueNext
+  );
+
+  return c.json({ success: true as const, data: { testCases: result, jobId } }, 200);
+});
+
+problems.openapi(getOutputsRoute, async (c) => {
+  const { problemId } = c.req.valid("param");
+  const result = await getTestCaseOutputs(problemId);
+  return c.json({ success: true as const, data: result }, 200);
+});
+
+// ============== Generation Status Route ==============
+
+problems.openapi(getGenerationStatusRoute, async (c) => {
+  const { problemId } = c.req.valid("param");
   const job = await getLatestJobForProblem(problemId);
 
   if (!job) {
     return c.json({
-      success: true,
-      data: { status: "none", message: "No generation job found" },
-    });
+      success: true as const,
+      data: { status: "none" as const },
+    }, 200);
   }
 
   const totalSteps = STEP_ORDER.length;
   const completedCount = job.completedSteps?.length || 0;
 
   return c.json({
-    success: true,
+    success: true as const,
     data: {
       jobId: job.id,
       status: job.status,
-      currentStep: job.currentStep,
-      completedSteps: job.completedSteps,
+      currentStep: job.currentStep as any,
+      completedSteps: job.completedSteps as any,
       progress: {
         completed: completedCount,
         total: totalSteps,
         percent: Math.round((completedCount / totalSteps) * 100),
       },
-      error: job.error,
+      error: job.error ?? undefined,
     },
-  });
+  }, 200);
 });
 
 export { problems };

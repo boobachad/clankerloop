@@ -1,7 +1,12 @@
+/**
+ * Type-safe API client for the ClankerRank backend.
+ * Uses explicit types from @repo/api-types for type safety.
+ */
+
 const getBackendUrl = () => {
   const url = process.env.NEXT_PUBLIC_BACKEND_URL;
   if (!url) {
-    throw new Error("BACKEND_URL environment variable is not set");
+    throw new Error("NEXT_PUBLIC_BACKEND_URL environment variable is not set");
   }
   return url;
 };
@@ -9,39 +14,45 @@ const getBackendUrl = () => {
 const getBackendApiKey = () => {
   const apiKey = process.env.NEXT_PUBLIC_BACKEND_API_KEY;
   if (!apiKey) {
-    throw new Error("BACKEND_API_KEY environment variable is not set");
+    throw new Error("NEXT_PUBLIC_BACKEND_API_KEY environment variable is not set");
   }
   return apiKey;
 };
 
-interface BackendResponse<T> {
+interface ApiResponse<T> {
   success: boolean;
   data?: T;
   error?: { code: string; message: string };
 }
 
-export async function backendGet<T>(
+/**
+ * Makes a GET request to the backend API.
+ */
+export async function apiGet<T>(
   path: string,
   encryptedUserId?: string
 ): Promise<T> {
   const apiKey = encryptedUserId || getBackendApiKey();
-  const res = await fetch(`${getBackendUrl()}/api/v1${path}`, {
+  const res = await fetch(`${getBackendUrl()}/api/v1/problems${path}`, {
     headers: { "X-API-Key": apiKey },
   });
-  const json: BackendResponse<T> = await res.json();
+  const json: ApiResponse<T> = await res.json();
   if (!json.success) {
     throw new Error(json.error?.message || "Backend request failed");
   }
   return json.data as T;
 }
 
-export async function backendPost<T>(
+/**
+ * Makes a POST request to the backend API.
+ */
+export async function apiPost<T>(
   path: string,
   body?: object,
   encryptedUserId?: string
 ): Promise<T> {
   const apiKey = encryptedUserId || getBackendApiKey();
-  const res = await fetch(`${getBackendUrl()}/api/v1${path}`, {
+  const res = await fetch(`${getBackendUrl()}/api/v1/problems${path}`, {
     method: "POST",
     headers: {
       "X-API-Key": apiKey,
@@ -49,7 +60,7 @@ export async function backendPost<T>(
     },
     body: body ? JSON.stringify(body) : undefined,
   });
-  const json: BackendResponse<T> = await res.json();
+  const json: ApiResponse<T> = await res.json();
   if (!json.success) {
     throw new Error(json.error?.message || "Backend request failed");
   }

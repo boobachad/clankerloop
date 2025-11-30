@@ -9,8 +9,16 @@
     "lint": "eslint . --max-warnings 0",
     "check-types": "tsc --noEmit"
   },
+  "exports": {
+    ".": "./src/index.ts",
+    "./client": "./src/client-types.ts"
+  },
   "dependencies": {
-    "hono": "^4.7.0"
+    "@hono/swagger-ui": "^0.4.0",
+    "@hono/zod-openapi": "^0.18.0",
+    "@repo/api-types": "*",
+    "hono": "^4.7.0",
+    "zod": "^3.23.0"
   },
   "devDependencies": {
     "@repo/eslint-config": "*",
