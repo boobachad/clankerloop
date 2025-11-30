@@ -159,7 +159,6 @@ export default function ProblemRender({
         <ResizablePanel defaultSize={20} className="min-h-0">
           <div className="h-full overflow-auto p-4 flex flex-col gap-4">
             <div>Problem: {problemId}</div>
-            <div>User: {JSON.stringify(user)}</div>
             <div>
               {!problemText && (
                 <>
