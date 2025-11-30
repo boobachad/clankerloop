@@ -2,21 +2,19 @@ import { backendGet, backendPost } from "@/lib/backend-client";
 
 export async function generateSolution(
   problemId: string,
-  encryptedUserId?: string
+  model: string,
+  encryptedUserId?: string,
+  updateProblem: boolean = true,
+  enqueueNextStep: boolean = true
 ) {
-  return backendPost<string>(
+  const response = await backendPost<{ solution: string; jobId: string }>(
     `/problems/${problemId}/solution/generate`,
-    undefined,
+    { model, updateProblem, enqueueNextStep },
     encryptedUserId
   );
+  return response.solution;
 }
 
-export async function getSolution(
-  problemId: string,
-  encryptedUserId?: string
-) {
-  return backendGet<string>(
-    `/problems/${problemId}/solution`,
-    encryptedUserId
-  );
+export async function getSolution(problemId: string, encryptedUserId?: string) {
+  return backendGet<string>(`/problems/${problemId}/solution`, encryptedUserId);
 }

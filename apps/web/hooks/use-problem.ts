@@ -22,9 +22,9 @@ import {
 import { runUserSolution } from "@/actions/run-user-solution";
 import {
   getGenerationStatus,
-  type GenerationStatus,
   type GenerationStep,
 } from "@/actions/generation-status";
+import { listModels } from "@/actions/list-models";
 
 export function useProblemText(
   problemId: string | null,
@@ -215,8 +215,24 @@ export function useSolution(
   });
 
   const generateMutation = useMutation({
-    mutationFn: async (id: string) => {
-      const result = await generateSolution(id, encryptedUserId);
+    mutationFn: async ({
+      id,
+      model,
+      updateProblem,
+      enqueueNextStep,
+    }: {
+      id: string;
+      model: string;
+      updateProblem?: boolean;
+      enqueueNextStep?: boolean;
+    }) => {
+      const result = await generateSolution(
+        id,
+        model,
+        encryptedUserId,
+        updateProblem,
+        enqueueNextStep
+      );
       queryClient.setQueryData(queryKey, result);
       return result;
     },
@@ -227,9 +243,18 @@ export function useSolution(
     return query.refetch();
   };
 
-  const generateData = async () => {
+  const generateData = async (
+    model: string,
+    updateProblem?: boolean,
+    enqueueNextStep?: boolean
+  ) => {
     if (!problemId) throw new Error("Problem ID is not set");
-    return generateMutation.mutateAsync(problemId);
+    return generateMutation.mutateAsync({
+      id: problemId,
+      model,
+      updateProblem,
+      enqueueNextStep,
+    });
   };
 
   return {
@@ -354,6 +379,21 @@ export function useGenerationStatus(
     isComplete: query.data?.status === "completed",
     isFailed: query.data?.status === "failed",
     error: query.data?.error,
+  };
+}
+
+export function useModels(encryptedUserId?: string) {
+  const query = useQuery({
+    queryKey: ["models", encryptedUserId],
+    queryFn: () => listModels(encryptedUserId),
+    staleTime: 5 * 60 * 1000, // 5 minutes
+  });
+
+  return {
+    isLoading: query.isLoading,
+    error: query.error,
+    data: query.data,
+    models: query.data ?? [],
   };
 }
 

@@ -3,7 +3,11 @@ import { z } from "zod/v3";
 import { DEFAULT_LANGUAGE } from "./constants";
 import { getProblem, updateProblem, type TestCase } from "@repo/db";
 
-export async function generateSolution(problemId: string, model: string) {
+export async function generateSolution(
+  problemId: string,
+  model: string,
+  updateProblemInDb: boolean = true
+) {
   const { problemText, functionSignature, testCases } =
     await getProblem(problemId);
 
@@ -39,7 +43,9 @@ THE FUNCTION NAME MUST BE runSolution.
 
   const solution = object.solution;
 
-  await updateProblem(problemId, { solution });
+  if (updateProblemInDb) {
+    await updateProblem(problemId, { solution });
+  }
 
   return solution;
 }

@@ -338,7 +338,11 @@ problems.get("/:problemId/test-cases/inputs", async (c) => {
 // Solution
 problems.post("/:problemId/solution/generate", async (c) => {
   const problemId = c.req.param("problemId");
-  const body = await c.req.json<{ model: string }>();
+  const body = await c.req.json<{
+    model: string;
+    updateProblem?: boolean;
+    enqueueNextStep?: boolean;
+  }>();
 
   if (!body.model) {
     return c.json(
@@ -357,14 +361,23 @@ problems.post("/:problemId/solution/generate", async (c) => {
     await updateProblem(problemId, { generatedByModelId: modelId });
   }
 
-  const result = await generateSolution(problemId, body.model);
-
-  const jobId = await enqueueNextStepIfAuto(
-    c,
+  const updateProblemInDb = body.updateProblem !== false; // default true
+  const result = await generateSolution(
     problemId,
-    "generateSolution",
-    body.model
+    body.model,
+    updateProblemInDb
   );
+
+  let jobId: string | null = null;
+  const shouldEnqueue = body.enqueueNextStep !== false; // default true
+  if (shouldEnqueue) {
+    jobId = await enqueueNextStepIfAuto(
+      c,
+      problemId,
+      "generateSolution",
+      body.model
+    );
+  }
 
   return c.json({ success: true, data: { solution: result, jobId } });
 });

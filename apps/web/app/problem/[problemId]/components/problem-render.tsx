@@ -20,12 +20,20 @@ import {
   useTestCaseOutputs,
   useRunUserSolution,
   useGenerationStatus,
+  useModels,
 } from "@/hooks/use-problem";
 import { Skeleton } from "@/components/ui/skeleton";
 import Link from "next/link";
 import { ClientFacingUserObject } from "@/lib/auth-types";
 import { signOutAction } from "@/app/(auth)/signout";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 function getStartingCode(language: string, functionSignature: string) {
   if (language === "typescript") {
@@ -43,6 +51,7 @@ export default function ProblemRender({
 }) {
   const [userSolution, setUserSolution] = useState<string | null>(null);
   const [language, _setLanguage] = useState<string>("typescript");
+  const [selectedModel, setSelectedModel] = useState<string>("");
 
   const {
     isLoading: isProblemTextLoading,
@@ -95,6 +104,12 @@ export default function ProblemRender({
   } = useSolution(problemId, user.apiKey);
 
   const {
+    isLoading: isModelsLoading,
+    error: modelsError,
+    models,
+  } = useModels(user.apiKey);
+
+  const {
     isLoading: isGenerateTestCaseOutputsLoading,
     error: testCaseOutputsError,
     data: testCaseOutputs,
@@ -116,6 +131,13 @@ export default function ProblemRender({
     isFailed,
     error: generationError,
   } = useGenerationStatus(problemId, user.apiKey);
+
+  // Set default model when models are loaded
+  useEffect(() => {
+    if (models.length > 0 && !selectedModel) {
+      setSelectedModel(models[0].name);
+    }
+  }, [models, selectedModel]);
 
   // Auto-fetch data as each step completes or while generation is in progress
   useEffect(() => {
@@ -495,6 +517,72 @@ export default function ProblemRender({
               <Button variant={"outline"} onClick={() => callRunUserSolution()}>
                 Run User Solution
               </Button>
+            </div>
+            <div className="space-y-2">
+              <div className="flex gap-2 items-end">
+                <div className="flex-1 space-y-2">
+                  <label className="text-sm font-medium">
+                    Generate Solution with Model
+                  </label>
+                  {isModelsLoading ? (
+                    <div className="text-sm text-muted-foreground">
+                      Loading models...
+                    </div>
+                  ) : modelsError ? (
+                    <Alert variant="destructive">
+                      <AlertTitle>Error</AlertTitle>
+                      <AlertDescription>
+                        {modelsError instanceof Error
+                          ? modelsError.message
+                          : String(modelsError)}
+                      </AlertDescription>
+                    </Alert>
+                  ) : (
+                    <Select
+                      value={selectedModel}
+                      onValueChange={setSelectedModel}
+                      disabled={isGenerateSolutionLoading}
+                    >
+                      <SelectTrigger className="w-full">
+                        <SelectValue placeholder="Select a model" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {models.map((model) => (
+                          <SelectItem key={model.id} value={model.name}>
+                            {model.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  )}
+                </div>
+                <Button
+                  variant={"outline"}
+                  onClick={async () => {
+                    if (!selectedModel) {
+                      alert("Please select a model");
+                      return;
+                    }
+                    try {
+                      const generatedSolution = await callGenerateSolution(
+                        selectedModel,
+                        false,
+                        false
+                      );
+                      if (generatedSolution) {
+                        setUserSolution(generatedSolution);
+                      }
+                    } catch (error) {
+                      console.error("Failed to generate solution:", error);
+                    }
+                  }}
+                  disabled={isGenerateSolutionLoading || !selectedModel}
+                >
+                  {isGenerateSolutionLoading
+                    ? "Generating..."
+                    : "Generate Solution"}
+                </Button>
+              </div>
             </div>
             {isRunUserSolutionLoading ? (
               <Loader />
