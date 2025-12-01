@@ -51,6 +51,7 @@ export default function ProblemRender({
   user: ClientFacingUserObject;
 }) {
   const [userSolution, setUserSolution] = useState<string | null>(null);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [language, _setLanguage] = useState<string>("typescript");
   const [selectedModel, setSelectedModel] = useState<string>("");
 
