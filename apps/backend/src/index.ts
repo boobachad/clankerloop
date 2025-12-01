@@ -3,7 +3,6 @@ import { swaggerUI } from "@hono/swagger-ui";
 import { cors } from "hono/cors";
 import { logger } from "hono/logger";
 import type { ContentfulStatusCode } from "hono/utils/http-status";
-import type { MessageBatch } from "@cloudflare/workers-types";
 import { apiKeyAuth } from "./middleware/auth";
 import { problems } from "./routes/problems";
 import { handleQueueBatch } from "./queue/consumer";
@@ -19,12 +18,12 @@ app.use(
     origin: process.env.CORS_ORIGIN || "*",
     allowHeaders: ["Content-Type", "X-API-Key"],
     allowMethods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-  }),
+  })
 );
 
 // Health check (no auth required)
 app.get("/health", (c) =>
-  c.json({ status: "ok", timestamp: new Date().toISOString() }),
+  c.json({ status: "ok", timestamp: new Date().toISOString() })
 );
 
 // Register security scheme for OpenAPI docs
@@ -87,7 +86,7 @@ app.onError((err, c) => {
       },
       timestamp: new Date().toISOString(),
     },
-    status,
+    status
   );
 });
 
@@ -102,7 +101,7 @@ app.notFound((c) => {
       },
       timestamp: new Date().toISOString(),
     },
-    404,
+    404
   );
 });
 

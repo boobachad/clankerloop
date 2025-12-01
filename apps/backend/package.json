@@ -14,9 +14,11 @@
     "./client": "./src/client-types.ts"
   },
   "dependencies": {
+    "@cloudflare/sandbox": "^0.6.0",
     "@hono/swagger-ui": "^0.4.0",
     "@hono/zod-openapi": "^0.18.0",
     "@repo/api-types": "*",
+    "ai": "^5.0.104",
     "hono": "^4.7.0",
     "zod": "^3.23.0"
   },
