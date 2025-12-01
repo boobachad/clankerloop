@@ -77,6 +77,12 @@ export const SolutionGenerateResponseSchema = SolutionSchema.extend({
   jobId: z.string().uuid().nullable(),
 }).openapi("SolutionGenerateResponse");
 
+export const ProblemModelSchema = z
+  .object({
+    model: z.string().nullable(),
+  })
+  .openapi("ProblemModel");
+
 // Inferred types
 export type Problem = z.infer<typeof ProblemSchema>;
 export type CreateProblemRequest = z.infer<typeof CreateProblemRequestSchema>;
@@ -88,3 +94,4 @@ export type RunSolutionRequest = z.infer<typeof RunSolutionRequestSchema>;
 export type CreateProblemResponse = z.infer<typeof CreateProblemResponseSchema>;
 export type ProblemText = z.infer<typeof ProblemTextSchema>;
 export type Solution = z.infer<typeof SolutionSchema>;
+export type ProblemModel = z.infer<typeof ProblemModelSchema>;

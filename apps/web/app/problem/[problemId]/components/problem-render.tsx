@@ -22,6 +22,7 @@ import {
   useRunUserSolution,
   useGenerationStatus,
   useModels,
+  useProblemModel,
 } from "@/hooks/use-problem";
 import { Skeleton } from "@/components/ui/skeleton";
 import Link from "next/link";
@@ -116,6 +117,8 @@ export default function ProblemRender({
     models,
   } = useModels(user.apiKey);
 
+  const { model: problemModel } = useProblemModel(problemId, user.apiKey);
+
   const {
     isLoading: isGenerateTestCaseOutputsLoading,
     error: testCaseOutputsError,
@@ -140,12 +143,14 @@ export default function ProblemRender({
     error: generationError,
   } = useGenerationStatus(problemId, user.apiKey);
 
-  // Set default model when models are loaded
+  // Set default model: use problem model if available, otherwise use first model from list
   useEffect(() => {
-    if (models && models[0] && !selectedModel) {
+    if (problemModel && !selectedModel) {
+      setSelectedModel(problemModel);
+    } else if (models && models[0] && !selectedModel && !problemModel) {
       setSelectedModel(models[0].name);
     }
-  }, [models, selectedModel]);
+  }, [models, problemModel, selectedModel]);
 
   // Auto-fetch data as each step completes or while generation is in progress
   useEffect(() => {
@@ -277,7 +282,8 @@ export default function ProblemRender({
                 <>
                   <Button
                     variant={"outline"}
-                    onClick={() => callGenerateProblemText()}
+                    onClick={() => callGenerateProblemText(selectedModel)}
+                    disabled={!selectedModel}
                   >
                     {problemText ? "Re-generate" : "Generate"} Problem Text
                   </Button>
@@ -328,7 +334,8 @@ export default function ProblemRender({
                 <>
                   <Button
                     variant={"outline"}
-                    onClick={() => callGenerateTestCases()}
+                    onClick={() => callGenerateTestCases(selectedModel)}
+                    disabled={!selectedModel}
                   >
                     {testCases ? "Re-generate" : "Generate"} Test Case
                     Descriptions
@@ -374,7 +381,8 @@ export default function ProblemRender({
                 <>
                   <Button
                     variant={"outline"}
-                    onClick={() => callGenerateTestCaseInputCode()}
+                    onClick={() => callGenerateTestCaseInputCode(selectedModel)}
+                    disabled={!selectedModel}
                   >
                     {testCaseInputCode ? "Re-generate" : "Generate"} Test Case
                     Input Code
