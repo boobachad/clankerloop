@@ -15,13 +15,11 @@ app.use("*", logger());
 app.use(
   "*",
   cors({
-    origin: (origin, c) => {
-      // CORS_ORIGIN may not be in Env type, so we'll access it safely
-      const corsOrigin = (c.env as Record<string, string | undefined>).CORS_ORIGIN;
-      return corsOrigin || "*";
-    },
-    allowHeaders: ["Content-Type", "X-API-Key"],
-    allowMethods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    origin: "*", // Allow all origins - safe because we use API key auth, not cookies
+    allowHeaders: ["Content-Type", "X-API-Key", "Authorization"],
+    allowMethods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
+    exposeHeaders: ["Content-Type"],
+    maxAge: 86400, // 24 hours
   }),
 );
 
