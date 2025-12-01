@@ -50,6 +50,11 @@ export async function generateTestCases(
               isEdgeCase: z
                 .boolean()
                 .describe("Whether this is an edge case or normal case"),
+              isSampleCase: z
+                .boolean()
+                .describe(
+                  "Whether this is a sample case or not. Only up to 3 sample cases are allowed; these should only help the user understand examples of the problem.",
+                ),
             }),
           )
           .describe("A list of test case descriptions")

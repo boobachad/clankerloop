@@ -529,7 +529,7 @@ problems.openapi(generateSolutionRoute, async (c) => {
   }
 
   // Update problem with model if not set
-  if (!problem.generatedByModelId) {
+  if (!problem.generatedByModelId && body.updateProblem) {
     const modelId = await getOrCreateModel(body.model);
     await updateProblem(problemId, { generatedByModelId: modelId });
   }

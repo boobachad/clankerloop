@@ -1,4 +1,8 @@
-import { WorkflowEntrypoint, WorkflowStep, type WorkflowEvent } from "cloudflare:workers";
+import {
+  WorkflowEntrypoint,
+  WorkflowStep,
+  type WorkflowEvent,
+} from "cloudflare:workers";
 import { getSandbox } from "@cloudflare/sandbox";
 import {
   generateProblemText,
@@ -21,9 +25,13 @@ type WorkflowParams = {
   startingStep?: GenerationStep; // Optional: skip steps before this one
 };
 
-export class ProblemGenerationWorkflow extends WorkflowEntrypoint<Env, WorkflowParams> {
+export class ProblemGenerationWorkflow extends WorkflowEntrypoint<
+  Env,
+  WorkflowParams
+> {
   async run(event: WorkflowEvent<WorkflowParams>, step: WorkflowStep) {
-    const { jobId, problemId, model, returnDummy, startingStep } = event.payload;
+    const { jobId, problemId, model, returnDummy, startingStep } =
+      event.payload;
 
     // Helper to check if step should be skipped
     const shouldRunStep = (stepName: GenerationStep) => {
@@ -45,9 +53,18 @@ export class ProblemGenerationWorkflow extends WorkflowEntrypoint<Env, WorkflowP
       // Step 1: Generate Problem Text
       if (shouldRunStep("generateProblemText")) {
         await step.do("generateProblemText", async () => {
-          console.log(`[Workflow] Processing generateProblemText for problem ${problemId}`);
+          console.log(
+            `[Workflow] Processing generateProblemText for problem ${problemId}`,
+          );
           await updateJobStatus(jobId, "in_progress", "generateProblemText");
-          await generateProblemText(problemId, model, userId, this.env, false, returnDummy);
+          await generateProblemText(
+            problemId,
+            model,
+            userId,
+            this.env,
+            false,
+            returnDummy,
+          );
           await markStepComplete(jobId, "generateProblemText");
         });
       }
@@ -55,9 +72,18 @@ export class ProblemGenerationWorkflow extends WorkflowEntrypoint<Env, WorkflowP
       // Step 2: Generate Test Cases
       if (shouldRunStep("generateTestCases")) {
         await step.do("generateTestCases", async () => {
-          console.log(`[Workflow] Processing generateTestCases for problem ${problemId}`);
+          console.log(
+            `[Workflow] Processing generateTestCases for problem ${problemId}`,
+          );
           await updateJobStatus(jobId, "in_progress", "generateTestCases");
-          await generateTestCases(problemId, model, userId, this.env, false, returnDummy);
+          await generateTestCases(
+            problemId,
+            model,
+            userId,
+            this.env,
+            false,
+            returnDummy,
+          );
           await markStepComplete(jobId, "generateTestCases");
         });
       }
@@ -65,9 +91,22 @@ export class ProblemGenerationWorkflow extends WorkflowEntrypoint<Env, WorkflowP
       // Step 3: Generate Test Case Input Code
       if (shouldRunStep("generateTestCaseInputCode")) {
         await step.do("generateTestCaseInputCode", async () => {
-          console.log(`[Workflow] Processing generateTestCaseInputCode for problem ${problemId}`);
-          await updateJobStatus(jobId, "in_progress", "generateTestCaseInputCode");
-          await generateTestCaseInputCode(problemId, model, userId, this.env, false, returnDummy);
+          console.log(
+            `[Workflow] Processing generateTestCaseInputCode for problem ${problemId}`,
+          );
+          await updateJobStatus(
+            jobId,
+            "in_progress",
+            "generateTestCaseInputCode",
+          );
+          await generateTestCaseInputCode(
+            problemId,
+            model,
+            userId,
+            this.env,
+            false,
+            returnDummy,
+          );
           await markStepComplete(jobId, "generateTestCaseInputCode");
         });
       }
@@ -75,11 +114,13 @@ export class ProblemGenerationWorkflow extends WorkflowEntrypoint<Env, WorkflowP
       // Step 4: Generate Test Case Inputs
       if (shouldRunStep("generateTestCaseInputs")) {
         await step.do("generateTestCaseInputs", async () => {
-          console.log(`[Workflow] Processing generateTestCaseInputs for problem ${problemId}`);
+          console.log(
+            `[Workflow] Processing generateTestCaseInputs for problem ${problemId}`,
+          );
           await updateJobStatus(jobId, "in_progress", "generateTestCaseInputs");
           await generateTestCaseInputs(
             problemId,
-            getSandboxInstance(`inputs-${problemId}`)
+            getSandboxInstance(`inputs-${problemId}`),
           );
           await markStepComplete(jobId, "generateTestCaseInputs");
         });
@@ -88,9 +129,19 @@ export class ProblemGenerationWorkflow extends WorkflowEntrypoint<Env, WorkflowP
       // Step 5: Generate Solution
       if (shouldRunStep("generateSolution")) {
         await step.do("generateSolution", async () => {
-          console.log(`[Workflow] Processing generateSolution for problem ${problemId}`);
+          console.log(
+            `[Workflow] Processing generateSolution for problem ${problemId}`,
+          );
           await updateJobStatus(jobId, "in_progress", "generateSolution");
-          await generateSolution(problemId, model, userId, this.env, true, false, returnDummy);
+          await generateSolution(
+            problemId,
+            model,
+            userId,
+            this.env,
+            true,
+            false,
+            returnDummy,
+          );
           await markStepComplete(jobId, "generateSolution");
         });
       }
@@ -98,11 +149,17 @@ export class ProblemGenerationWorkflow extends WorkflowEntrypoint<Env, WorkflowP
       // Step 6: Generate Test Case Outputs
       if (shouldRunStep("generateTestCaseOutputs")) {
         await step.do("generateTestCaseOutputs", async () => {
-          console.log(`[Workflow] Processing generateTestCaseOutputs for problem ${problemId}`);
-          await updateJobStatus(jobId, "in_progress", "generateTestCaseOutputs");
+          console.log(
+            `[Workflow] Processing generateTestCaseOutputs for problem ${problemId}`,
+          );
+          await updateJobStatus(
+            jobId,
+            "in_progress",
+            "generateTestCaseOutputs",
+          );
           await generateTestCaseOutputs(
             problemId,
-            getSandboxInstance(`outputs-${problemId}`)
+            getSandboxInstance(`outputs-${problemId}`),
           );
           await markStepComplete(jobId, "generateTestCaseOutputs");
         });
