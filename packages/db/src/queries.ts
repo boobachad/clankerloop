@@ -40,6 +40,10 @@ export async function createModel(name: string): Promise<string> {
     .values({ name })
     .returning({ id: models.id });
 
+  if (!result || !result.id) {
+    throw new Error(`Failed to create model: ${name}`);
+  }
+
   return result.id;
 }
 
@@ -63,10 +67,25 @@ export async function listModels(): Promise<Model[]> {
   });
 }
 
+export async function getModelForProblem(
+  problemId: string
+): Promise<string | null> {
+  const problem = await db.query.problems.findFirst({
+    where: eq(problems.id, problemId),
+  });
+
+  if (!problem || !problem.generatedByModelId) {
+    return null;
+  }
+
+  const model = await getModel(problem.generatedByModelId);
+  return model?.name ?? null;
+}
+
 // Problem functions
 
 export async function createProblem(
-  data?: Partial<NewProblem>,
+  data?: Partial<NewProblem>
 ): Promise<string> {
   const [result] = await db
     .insert(problems)
@@ -78,11 +97,15 @@ export async function createProblem(
     })
     .returning({ id: problems.id });
 
+  if (!result || !result.id) {
+    throw new Error(`Failed to create problem`);
+  }
+
   return result.id;
 }
 
 export async function getProblem(
-  problemId: string,
+  problemId: string
 ): Promise<ProblemWithTestCases> {
   const problem = await db.query.problems.findFirst({
     where: eq(problems.id, problemId),
@@ -105,7 +128,7 @@ export async function getProblem(
 
 export async function updateProblem(
   problemId: string,
-  data: Partial<Omit<NewProblem, "id">>,
+  data: Partial<Omit<NewProblem, "id">>
 ): Promise<void> {
   await db
     .update(problems)
@@ -129,7 +152,7 @@ export async function listProblems(): Promise<string[]> {
 
 export async function createTestCase(
   problemId: string,
-  data: Omit<NewTestCase, "id" | "problemId" | "createdAt">,
+  data: Omit<NewTestCase, "id" | "problemId" | "createdAt">
 ): Promise<string> {
   const [result] = await db
     .insert(testCases)
@@ -143,12 +166,16 @@ export async function createTestCase(
     })
     .returning({ id: testCases.id });
 
+  if (!result || !result.id) {
+    throw new Error(`Failed to create test case`);
+  }
+
   return result.id;
 }
 
 export async function updateTestCase(
   testCaseId: string,
-  data: Partial<Omit<NewTestCase, "id" | "problemId" | "createdAt">>,
+  data: Partial<Omit<NewTestCase, "id" | "problemId" | "createdAt">>
 ): Promise<void> {
   await db.update(testCases).set(data).where(eq(testCases.id, testCaseId));
 }
@@ -158,7 +185,7 @@ export async function deleteTestCases(problemId: string): Promise<void> {
 }
 
 export async function getTestCasesByProblemId(
-  problemId: string,
+  problemId: string
 ): Promise<TestCase[]> {
   return db.query.testCases.findMany({
     where: eq(testCases.problemId, problemId),
@@ -167,7 +194,7 @@ export async function getTestCasesByProblemId(
 
 export async function createTestCases(
   problemId: string,
-  data: Omit<NewTestCase, "id" | "problemId" | "createdAt">[],
+  data: Omit<NewTestCase, "id" | "problemId" | "createdAt">[]
 ): Promise<TestCase[]> {
   if (data.length === 0) return [];
 
@@ -181,14 +208,14 @@ export async function createTestCases(
         inputCode: tc.inputCode,
         input: tc.input,
         expected: tc.expected,
-      })),
+      }))
     )
     .returning();
 }
 
 export async function replaceTestCases(
   problemId: string,
-  data: Omit<NewTestCase, "id" | "problemId" | "createdAt">[],
+  data: Omit<NewTestCase, "id" | "problemId" | "createdAt">[]
 ): Promise<TestCase[]> {
   // Delete existing test cases and insert new ones
   await deleteTestCases(problemId);
@@ -199,7 +226,7 @@ export async function replaceTestCases(
 
 export async function createGenerationJob(
   problemId: string,
-  modelId?: string,
+  modelId?: string
 ): Promise<string> {
   const [result] = await db
     .insert(generationJobs)
@@ -211,11 +238,15 @@ export async function createGenerationJob(
     })
     .returning({ id: generationJobs.id });
 
+  if (!result || !result.id) {
+    throw new Error(`Failed to create generation job`);
+  }
+
   return result.id;
 }
 
 export async function getGenerationJob(
-  jobId: string,
+  jobId: string
 ): Promise<GenerationJob | null> {
   const job = await db.query.generationJobs.findFirst({
     where: eq(generationJobs.id, jobId),
@@ -224,7 +255,7 @@ export async function getGenerationJob(
 }
 
 export async function getLatestJobForProblem(
-  problemId: string,
+  problemId: string
 ): Promise<GenerationJob | null> {
   const job = await db.query.generationJobs.findFirst({
     where: eq(generationJobs.problemId, problemId),
@@ -237,7 +268,7 @@ export async function updateJobStatus(
   jobId: string,
   status: "pending" | "in_progress" | "completed" | "failed",
   currentStep?: string,
-  error?: string,
+  error?: string
 ): Promise<void> {
   await db
     .update(generationJobs)
@@ -252,7 +283,7 @@ export async function updateJobStatus(
 
 export async function markStepComplete(
   jobId: string,
-  step: string,
+  step: string
 ): Promise<void> {
   const job = await getGenerationJob(jobId);
   if (!job) {

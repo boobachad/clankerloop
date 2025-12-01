@@ -25,6 +25,7 @@ import {
   TestOutputsGetResponseSchema,
   TestResultsSchema,
   GenerationStatusSchema,
+  ProblemModelSchema,
 } from "@repo/api-types";
 import { z } from "@hono/zod-openapi";
 
@@ -512,6 +513,28 @@ export const getGenerationStatusRoute = createRoute({
         },
       },
       description: "Generation status retrieved",
+    },
+  },
+  security: [{ ApiKeyAuth: [] }],
+});
+
+export const getProblemModelRoute = createRoute({
+  method: "get",
+  path: "/{problemId}/model",
+  tags: ["Problems"],
+  summary: "Get problem model",
+  description: "Retrieves the model name used to generate the problem",
+  request: {
+    params: ProblemIdParamSchema,
+  },
+  responses: {
+    200: {
+      content: {
+        "application/json": {
+          schema: ApiSuccessSchema(ProblemModelSchema),
+        },
+      },
+      description: "Problem model retrieved",
     },
   },
   security: [{ ApiKeyAuth: [] }],

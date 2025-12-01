@@ -26,6 +26,7 @@ import {
   listModels,
   updateProblem,
   getProblem,
+  getModelForProblem,
 } from "@repo/db";
 import { getNextStep, STEP_ORDER, type GenerationStep } from "../queue/types";
 import {
@@ -46,6 +47,7 @@ import {
   generateOutputsRoute,
   getOutputsRoute,
   getGenerationStatusRoute,
+  getProblemModelRoute,
 } from "./problems.routes";
 
 const problems = new OpenAPIHono<{
@@ -455,6 +457,12 @@ problems.openapi(getGenerationStatusRoute, async (c) => {
     },
     200,
   );
+});
+
+problems.openapi(getProblemModelRoute, async (c) => {
+  const { problemId } = c.req.valid("param");
+  const modelName = await getModelForProblem(problemId);
+  return c.json({ success: true as const, data: { model: modelName } }, 200);
 });
 
 export { problems };

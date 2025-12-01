@@ -15,7 +15,7 @@ import { getNextStep } from "./types";
 
 export async function handleQueueBatch(
   batch: MessageBatch<QueueMessage>,
-  env: Env,
+  env: Env
 ): Promise<void> {
   for (const message of batch.messages) {
     const { jobId, problemId, step, model } = message.body;
@@ -47,15 +47,16 @@ export async function handleQueueBatch(
         await updateJobStatus(jobId, "completed");
         console.log(`[Queue] Pipeline complete for problem ${problemId}`);
       }
-
-      message.ack();
     } catch (error) {
       const errorMsg = error instanceof Error ? error.message : String(error);
       console.error(`[Queue] Error in ${step}: ${errorMsg}`);
 
       // Update job with error (will retry via Cloudflare's mechanism)
-      await updateJobStatus(jobId, "in_progress", step, errorMsg);
-      message.retry();
+      await updateJobStatus(jobId, "failed", step, errorMsg);
+      //   message.retry();
+    } finally {
+      message.ack();
+      console.log(`[Queue] Message acknowledged for problem ${problemId}`);
     }
   }
 }
@@ -64,7 +65,7 @@ async function executeStep(
   step: GenerationStep,
   problemId: string,
   env: Env,
-  model: string,
+  model: string
 ): Promise<void> {
   if (!model) {
     throw new Error("Model is required for generation steps");
@@ -88,7 +89,7 @@ async function executeStep(
     case "generateTestCaseInputs":
       await generateTestCaseInputs(
         problemId,
-        getSandboxInstance(`inputs-${problemId}`),
+        getSandboxInstance(`inputs-${problemId}`)
       );
       break;
     case "generateSolution":
@@ -97,7 +98,7 @@ async function executeStep(
     case "generateTestCaseOutputs":
       await generateTestCaseOutputs(
         problemId,
-        getSandboxInstance(`outputs-${problemId}`),
+        getSandboxInstance(`outputs-${problemId}`)
       );
       break;
   }

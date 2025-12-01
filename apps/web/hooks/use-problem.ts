@@ -25,10 +25,11 @@ import {
   type GenerationStep,
 } from "@/actions/generation-status";
 import { listModels } from "@/actions/list-models";
+import { getProblemModel } from "@/actions/get-problem-model";
 
 export function useProblemText(
   problemId: string | null,
-  encryptedUserId?: string,
+  encryptedUserId?: string
 ) {
   const queryClient = useQueryClient();
   const queryKey = ["problemText", problemId];
@@ -43,8 +44,8 @@ export function useProblemText(
   });
 
   const generateMutation = useMutation({
-    mutationFn: async (id: string) => {
-      const result = await generateProblemText(id, encryptedUserId);
+    mutationFn: async ({ id, model }: { id: string; model: string }) => {
+      const result = await generateProblemText(id, model, encryptedUserId);
       queryClient.setQueryData(queryKey, result);
       return result;
     },
@@ -55,9 +56,9 @@ export function useProblemText(
     return query.refetch();
   };
 
-  const generateData = async () => {
+  const generateData = async (model: string) => {
     if (!problemId) throw new Error("Problem ID is not set");
-    return generateMutation.mutateAsync(problemId);
+    return generateMutation.mutateAsync({ id: problemId, model });
   };
 
   return {
@@ -71,7 +72,7 @@ export function useProblemText(
 
 export function useTestCases(
   problemId: string | null,
-  encryptedUserId?: string,
+  encryptedUserId?: string
 ) {
   const queryClient = useQueryClient();
   const queryKey = ["testCases", problemId];
@@ -86,8 +87,8 @@ export function useTestCases(
   });
 
   const generateMutation = useMutation({
-    mutationFn: async (id: string) => {
-      const result = await generateTestCases(id, encryptedUserId);
+    mutationFn: async ({ id, model }: { id: string; model: string }) => {
+      const result = await generateTestCases(id, model, encryptedUserId);
       queryClient.setQueryData(queryKey, result);
       return result;
     },
@@ -98,9 +99,9 @@ export function useTestCases(
     return query.refetch();
   };
 
-  const generateData = async () => {
+  const generateData = async (model: string) => {
     if (!problemId) throw new Error("Problem ID is not set");
-    return generateMutation.mutateAsync(problemId);
+    return generateMutation.mutateAsync({ id: problemId, model });
   };
 
   return {
@@ -114,7 +115,7 @@ export function useTestCases(
 
 export function useTestCaseInputCode(
   problemId: string | null,
-  encryptedUserId?: string,
+  encryptedUserId?: string
 ) {
   const queryClient = useQueryClient();
   const queryKey = ["testCaseInputCode", problemId];
@@ -129,8 +130,12 @@ export function useTestCaseInputCode(
   });
 
   const generateMutation = useMutation({
-    mutationFn: async (id: string) => {
-      const result = await generateTestCaseInputCode(id, encryptedUserId);
+    mutationFn: async ({ id, model }: { id: string; model: string }) => {
+      const result = await generateTestCaseInputCode(
+        id,
+        model,
+        encryptedUserId
+      );
       queryClient.setQueryData(queryKey, result);
       return result;
     },
@@ -141,9 +146,9 @@ export function useTestCaseInputCode(
     return query.refetch();
   };
 
-  const generateData = async () => {
+  const generateData = async (model: string) => {
     if (!problemId) throw new Error("Problem ID is not set");
-    return generateMutation.mutateAsync(problemId);
+    return generateMutation.mutateAsync({ id: problemId, model });
   };
 
   return {
@@ -157,7 +162,7 @@ export function useTestCaseInputCode(
 
 export function useTestCaseInputs(
   problemId: string | null,
-  encryptedUserId?: string,
+  encryptedUserId?: string
 ) {
   const queryClient = useQueryClient();
   const queryKey = ["testCaseInputs", problemId];
@@ -200,7 +205,7 @@ export function useTestCaseInputs(
 
 export function useSolution(
   problemId: string | null,
-  encryptedUserId?: string,
+  encryptedUserId?: string
 ) {
   const queryClient = useQueryClient();
   const queryKey = ["solution", problemId];
@@ -231,7 +236,7 @@ export function useSolution(
         model,
         encryptedUserId,
         updateProblem,
-        enqueueNextStep,
+        enqueueNextStep
       );
       queryClient.setQueryData(queryKey, result);
       return result;
@@ -246,7 +251,7 @@ export function useSolution(
   const generateData = async (
     model: string,
     updateProblem?: boolean,
-    enqueueNextStep?: boolean,
+    enqueueNextStep?: boolean
   ) => {
     if (!problemId) throw new Error("Problem ID is not set");
     return generateMutation.mutateAsync({
@@ -268,7 +273,7 @@ export function useSolution(
 
 export function useGenerateSolutionWithModel(
   problemId: string | null,
-  encryptedUserId?: string,
+  encryptedUserId?: string
 ) {
   const generateMutation = useMutation({
     mutationFn: async ({
@@ -287,7 +292,7 @@ export function useGenerateSolutionWithModel(
         model,
         encryptedUserId,
         updateProblem,
-        enqueueNextStep,
+        enqueueNextStep
       );
     },
   });
@@ -295,7 +300,7 @@ export function useGenerateSolutionWithModel(
   const generateData = async (
     model: string,
     updateProblem?: boolean,
-    enqueueNextStep?: boolean,
+    enqueueNextStep?: boolean
   ) => {
     if (!problemId) throw new Error("Problem ID is not set");
     return generateMutation.mutateAsync({
@@ -316,7 +321,7 @@ export function useGenerateSolutionWithModel(
 
 export function useTestCaseOutputs(
   problemId: string | null,
-  encryptedUserId?: string,
+  encryptedUserId?: string
 ) {
   const queryClient = useQueryClient();
   const queryKey = ["testCaseOutputs", problemId];
@@ -360,7 +365,7 @@ export function useTestCaseOutputs(
 export function useRunUserSolution(
   problemId: string | null,
   userSolution: string | null,
-  encryptedUserId?: string,
+  encryptedUserId?: string
 ) {
   const queryClient = useQueryClient();
   const queryKey = ["runUserSolution", problemId, userSolution];
@@ -400,7 +405,7 @@ export function useRunUserSolution(
 
 export function useGenerationStatus(
   problemId: string | null,
-  encryptedUserId?: string,
+  encryptedUserId?: string
 ) {
   const query = useQuery({
     queryKey: ["generationStatus", problemId],
@@ -413,7 +418,7 @@ export function useGenerationStatus(
     refetchInterval: (query) => {
       const status = query.state.data?.status;
       if (status === "pending" || status === "in_progress") {
-        return 2000;
+        return 30_000;
       }
       return false;
     },
@@ -422,6 +427,7 @@ export function useGenerationStatus(
   return {
     data: query.data,
     completedSteps: (query.data?.completedSteps ?? []) as GenerationStep[],
+    currentStep: query.data?.currentStep as GenerationStep | null | undefined,
     isGenerating:
       query.data?.status === "pending" || query.data?.status === "in_progress",
     isComplete: query.data?.status === "completed",
@@ -442,6 +448,27 @@ export function useModels(encryptedUserId?: string) {
     error: query.error,
     data: query.data,
     models: query.data ?? [],
+  };
+}
+
+export function useProblemModel(
+  problemId: string | null,
+  encryptedUserId?: string
+) {
+  const query = useQuery({
+    queryKey: ["problemModel", problemId],
+    queryFn: () => {
+      if (!problemId) throw new Error("Problem ID is not set");
+      return getProblemModel(problemId, encryptedUserId);
+    },
+    enabled: !!problemId,
+    staleTime: 5 * 60 * 1000, // 5 minutes
+  });
+
+  return {
+    isLoading: query.isLoading,
+    error: query.error,
+    model: query.data ?? null,
   };
 }
 
