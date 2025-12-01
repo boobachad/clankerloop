@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Select,
   SelectContent,
@@ -29,6 +30,7 @@ export default function CreateProblemForm({
   const [newModelName, setNewModelName] = useState<string>("");
   const [isCreating, setIsCreating] = useState(false);
   const [isLoadingModels, setIsLoadingModels] = useState(true);
+  const [autoGenerate, setAutoGenerate] = useState<boolean>(true);
 
   useEffect(() => {
     async function loadModels() {
@@ -67,7 +69,7 @@ export default function CreateProblemForm({
         try {
           const newModel = await createModel(
             newModelName.trim(),
-            encryptedUserId,
+            encryptedUserId
           );
           modelToUse = newModel.name;
           // Refresh models list
@@ -83,7 +85,11 @@ export default function CreateProblemForm({
       }
 
       // Create problem with selected model
-      const { problemId } = await createProblem(modelToUse, encryptedUserId);
+      const { problemId } = await createProblem(
+        modelToUse,
+        encryptedUserId,
+        autoGenerate
+      );
       router.push(`/problem/${problemId}`);
     } catch (error) {
       console.error("Failed to create problem:", error);
@@ -136,6 +142,23 @@ export default function CreateProblemForm({
             If you enter a new model name, it will be created and used for this
             problem.
           </p>
+        </div>
+
+        <div className="flex items-center space-x-2">
+          <Checkbox
+            id="auto-generate"
+            checked={autoGenerate}
+            onCheckedChange={(checked) =>
+              setAutoGenerate(checked === true || checked === "indeterminate")
+            }
+            disabled={isCreating}
+          />
+          <Label
+            htmlFor="auto-generate"
+            className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+          >
+            Auto-enqueue next step
+          </Label>
         </div>
 
         <Button

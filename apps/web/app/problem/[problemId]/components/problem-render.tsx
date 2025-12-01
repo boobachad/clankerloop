@@ -3,6 +3,7 @@
 import Editor from "@monaco-editor/react";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Label } from "@/components/ui/label";
 import { useEffect, useState } from "react";
 import { MessageResponse } from "@/components/ai-elements/message";
 import Loader from "@/components/client/loader";
@@ -29,6 +30,7 @@ import Link from "next/link";
 import { ClientFacingUserObject } from "@/lib/auth-types";
 import { signOutAction } from "@/app/(auth)/signout";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Select,
   SelectContent,
@@ -55,6 +57,7 @@ export default function ProblemRender({
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [language, _setLanguage] = useState<string>("typescript");
   const [selectedModel, setSelectedModel] = useState<string>("");
+  const [autoEnqueue, setAutoEnqueue] = useState<boolean>(false);
 
   const {
     isLoading: isProblemTextLoading,
@@ -271,6 +274,21 @@ export default function ProblemRender({
         <ResizablePanel defaultSize={20} className="min-h-0">
           <div className="h-full overflow-auto p-4 flex flex-col gap-4">
             <div>Problem: {problemId}</div>
+            <div className="flex items-center space-x-2">
+              <Checkbox
+                id="auto-enqueue"
+                checked={autoEnqueue}
+                onCheckedChange={(checked) =>
+                  setAutoEnqueue(checked === true || checked === "indeterminate")
+                }
+              />
+              <Label
+                htmlFor="auto-enqueue"
+                className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+              >
+                Auto-enqueue next step
+              </Label>
+            </div>
             {generationError && (
               <Alert variant="destructive">
                 <AlertTitle>Generation Error</AlertTitle>
@@ -282,18 +300,21 @@ export default function ProblemRender({
                 <>
                   <Button
                     variant={"outline"}
-                    onClick={() => callGenerateProblemText(selectedModel)}
+                    onClick={() =>
+                      callGenerateProblemText(selectedModel, false, autoEnqueue)
+                    }
                     disabled={!selectedModel}
                   >
                     {problemText ? "Re-generate" : "Generate"} Problem Text
                   </Button>
                   <Button
                     variant={"outline"}
-                    onClick={() => callGenerateProblemText(selectedModel, true)}
+                    onClick={() =>
+                      callGenerateProblemText(selectedModel, true, autoEnqueue)
+                    }
                     disabled={!selectedModel}
                   >
-                    {problemText ? "Re-generate" : "Generate"} Problem Text
-                    (force error)
+                    {problemText ? "Re-generate" : "Generate"} Problem Text (force error)
                   </Button>
                   <Button variant={"outline"} onClick={() => getProblemText()}>
                     Re-fetch Problem Text
@@ -342,7 +363,9 @@ export default function ProblemRender({
                 <>
                   <Button
                     variant={"outline"}
-                    onClick={() => callGenerateTestCases(selectedModel)}
+                    onClick={() =>
+                      callGenerateTestCases(selectedModel, false, autoEnqueue)
+                    }
                     disabled={!selectedModel}
                   >
                     {testCases ? "Re-generate" : "Generate"} Test Case
@@ -350,7 +373,9 @@ export default function ProblemRender({
                   </Button>
                   <Button
                     variant={"outline"}
-                    onClick={() => callGenerateTestCases(selectedModel, true)}
+                    onClick={() =>
+                      callGenerateTestCases(selectedModel, true, autoEnqueue)
+                    }
                     disabled={!selectedModel}
                   >
                     {testCases ? "Re-generate" : "Generate"} Test Case
@@ -397,7 +422,13 @@ export default function ProblemRender({
                 <>
                   <Button
                     variant={"outline"}
-                    onClick={() => callGenerateTestCaseInputCode(selectedModel)}
+                    onClick={() =>
+                      callGenerateTestCaseInputCode(
+                        selectedModel,
+                        false,
+                        autoEnqueue
+                      )
+                    }
                     disabled={!selectedModel}
                   >
                     {testCaseInputCode ? "Re-generate" : "Generate"} Test Case
@@ -406,7 +437,11 @@ export default function ProblemRender({
                   <Button
                     variant={"outline"}
                     onClick={() =>
-                      callGenerateTestCaseInputCode(selectedModel, true)
+                      callGenerateTestCaseInputCode(
+                        selectedModel,
+                        true,
+                        autoEnqueue
+                      )
                     }
                     disabled={!selectedModel}
                   >
@@ -454,7 +489,7 @@ export default function ProblemRender({
                 <>
                   <Button
                     variant={"outline"}
-                    onClick={() => callGenerateTestCaseInputs()}
+                    onClick={() => callGenerateTestCaseInputs(autoEnqueue)}
                   >
                     {testCaseInputs ? "Re-run" : "Run"} Generate Input
                   </Button>
@@ -501,7 +536,14 @@ export default function ProblemRender({
                 <>
                   <Button
                     variant={"outline"}
-                    onClick={() => callGenerateSolution(selectedModel)}
+                    onClick={() =>
+                      callGenerateSolution(
+                        selectedModel,
+                        undefined,
+                        autoEnqueue,
+                        false
+                      )
+                    }
                   >
                     {solution ? "Re-generate" : "Generate"} Solution
                   </Button>
@@ -511,13 +553,12 @@ export default function ProblemRender({
                       callGenerateSolution(
                         selectedModel,
                         undefined,
-                        undefined,
-                        true,
+                        autoEnqueue,
+                        true
                       )
                     }
                   >
-                    {solution ? "Re-generate" : "Generate"} Solution (force
-                    error)
+                    {solution ? "Re-generate" : "Generate"} Solution (force error)
                   </Button>
                   <Button variant={"outline"} onClick={() => getSolution()}>
                     Re-fetch Solution
@@ -551,7 +592,7 @@ export default function ProblemRender({
                 <>
                   <Button
                     variant={"outline"}
-                    onClick={() => callGenerateTestCaseOutputs()}
+                    onClick={() => callGenerateTestCaseOutputs(autoEnqueue)}
                   >
                     {testCaseOutputs ? "Re-generate" : "Generate"} Test Case
                     Outputs
@@ -660,7 +701,8 @@ export default function ProblemRender({
                         await callGenerateSolutionWithModel(
                           selectedModel,
                           false,
-                          false,
+                          autoEnqueue,
+                          false
                         );
                       if (generatedSolution) {
                         setUserSolution(generatedSolution);
@@ -689,8 +731,8 @@ export default function ProblemRender({
                         await callGenerateSolutionWithModel(
                           selectedModel,
                           false,
-                          false,
-                          true,
+                          autoEnqueue,
+                          true
                         );
                       if (generatedSolution) {
                         setUserSolution(generatedSolution);
