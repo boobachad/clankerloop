@@ -62,6 +62,14 @@ export const RunSolutionRequestSchema = z
     code: z.string().min(1).openapi({
       example: "def solution(n: int) -> int:\n    return n * 2",
     }),
+    language: z
+      .enum(["typescript", "python"])
+      .optional()
+      .default("typescript")
+      .openapi({
+        example: "python",
+        description: "The programming language of the code",
+      }),
   })
   .openapi("RunSolutionRequest");
 
@@ -78,6 +86,14 @@ export const RunCustomTestsRequestSchema = z
         example: [[[1, 2, 3]], [[4, 5, 6]]],
         description:
           "Array of test inputs. Each input is an array of function arguments.",
+      }),
+    language: z
+      .enum(["typescript", "python"])
+      .optional()
+      .default("typescript")
+      .openapi({
+        example: "python",
+        description: "The programming language of the code",
       }),
   })
   .openapi("RunCustomTestsRequest");

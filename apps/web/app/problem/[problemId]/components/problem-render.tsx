@@ -184,14 +184,19 @@ export default function ProblemRender({
     error: userSolutionError,
     data: userSolutionTestResults,
     runData: callRunUserSolution,
-  } = useRunUserSolution(problemId, userSolution, user.apiKey);
+  } = useRunUserSolution(problemId, userSolution, language, user.apiKey);
 
   const {
     isLoading: isRunCustomTestsLoading,
     error: customTestsError,
     data: customTestResults,
     runData: callRunCustomTests,
-  } = useRunUserSolutionWithCustomInputs(problemId, userSolution, user.apiKey);
+  } = useRunUserSolutionWithCustomInputs(
+    problemId,
+    userSolution,
+    language,
+    user.apiKey
+  );
 
   const {
     completedSteps,
