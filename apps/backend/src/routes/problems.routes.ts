@@ -26,6 +26,10 @@ import {
   TestResultsSchema,
   GenerationStatusSchema,
   ProblemModelSchema,
+  FunctionSignatureSchemaResponseSchema,
+  FunctionSignatureSchemaGenerateResponseSchema,
+  StarterCodeRequestSchema,
+  StarterCodeResponseSchema,
 } from "@repo/api-types";
 import { z } from "@hono/zod-openapi";
 
@@ -190,6 +194,96 @@ export const getProblemTextRoute = createRoute({
         },
       },
       description: "Problem text retrieved",
+    },
+  },
+  security: [{ ApiKeyAuth: [] }],
+});
+
+// ============== Function Signature Schema Routes ==============
+
+export const parseFunctionSignatureRoute = createRoute({
+  method: "post",
+  path: "/{problemId}/function-signature/parse",
+  tags: ["Problems"],
+  summary: "Parse function signature to schema",
+  description:
+    "Parses the text function signature into a structured schema for multi-language code generation",
+  request: {
+    params: ProblemIdParamSchema,
+    body: {
+      content: {
+        "application/json": { schema: GenerateRequestSchema },
+      },
+      required: true,
+    },
+  },
+  responses: {
+    200: {
+      content: {
+        "application/json": {
+          schema: ApiSuccessSchema(FunctionSignatureSchemaGenerateResponseSchema),
+        },
+      },
+      description: "Function signature parsed successfully",
+    },
+    400: {
+      content: { "application/json": { schema: ApiErrorSchema } },
+      description: "Validation error",
+    },
+    409: {
+      content: { "application/json": { schema: ApiErrorSchema } },
+      description:
+        "Function signature schema already exists and parsing step has completed or is in progress",
+    },
+  },
+  security: [{ ApiKeyAuth: [] }],
+});
+
+export const getFunctionSignatureSchemaRoute = createRoute({
+  method: "get",
+  path: "/{problemId}/function-signature/schema",
+  tags: ["Problems"],
+  summary: "Get function signature schema",
+  description: "Retrieves the structured function signature schema",
+  request: {
+    params: ProblemIdParamSchema,
+  },
+  responses: {
+    200: {
+      content: {
+        "application/json": {
+          schema: ApiSuccessSchema(FunctionSignatureSchemaResponseSchema),
+        },
+      },
+      description: "Function signature schema retrieved",
+    },
+  },
+  security: [{ ApiKeyAuth: [] }],
+});
+
+export const getStarterCodeRoute = createRoute({
+  method: "get",
+  path: "/{problemId}/starter-code",
+  tags: ["Problems"],
+  summary: "Get starter code",
+  description:
+    "Generates starter code for the problem in the specified language",
+  request: {
+    params: ProblemIdParamSchema,
+    query: StarterCodeRequestSchema,
+  },
+  responses: {
+    200: {
+      content: {
+        "application/json": {
+          schema: ApiSuccessSchema(StarterCodeResponseSchema),
+        },
+      },
+      description: "Starter code generated successfully",
+    },
+    400: {
+      content: { "application/json": { schema: ApiErrorSchema } },
+      description: "Validation error or schema not available",
     },
   },
   security: [{ ApiKeyAuth: [] }],

@@ -3,6 +3,9 @@ import type { Context } from "hono";
 import {
   generateProblemText,
   getProblemText,
+  parseFunctionSignature,
+  getFunctionSignatureSchema,
+  createCodeGenerator,
   generateTestCases,
   getTestCases,
   generateTestCaseInputCode,
@@ -37,6 +40,9 @@ import {
   createProblemRoute,
   generateProblemTextRoute,
   getProblemTextRoute,
+  parseFunctionSignatureRoute,
+  getFunctionSignatureSchemaRoute,
+  getStarterCodeRoute,
   generateTestCasesRoute,
   getTestCasesRoute,
   generateInputCodeRoute,
@@ -318,6 +324,118 @@ problems.openapi(getProblemTextRoute, async (c) => {
   const { problemId } = c.req.valid("param");
   const result = await getProblemText(problemId);
   return c.json({ success: true as const, data: result }, 200);
+});
+
+// ============== Function Signature Schema Routes ==============
+
+problems.openapi(parseFunctionSignatureRoute, async (c) => {
+  const { problemId } = c.req.valid("param");
+  const body = c.req.valid("json");
+
+  // Validate prerequisite: problem text must exist
+  const problem = await getProblem(problemId);
+  if (
+    !problem.problemText ||
+    !problem.functionSignature ||
+    problem.problemText.trim() === "" ||
+    problem.functionSignature.trim() === ""
+  ) {
+    return c.json(
+      {
+        success: false as const,
+        error: {
+          code: "PREREQUISITE_ERROR",
+          message:
+            "Problem text must be generated before function signature can be parsed",
+        },
+      },
+      400,
+    );
+  }
+
+  // Check idempotency: if schema already exists and step completed/in progress, return 409
+  const dataExists = problem.functionSignatureSchema !== null;
+  if (
+    await shouldReturnIdempotentError(
+      problemId,
+      "parseFunctionSignature",
+      dataExists,
+    )
+  ) {
+    return c.json(
+      {
+        success: false as const,
+        error: {
+          code: "IDEMPOTENT_ERROR",
+          message:
+            "Function signature schema already exists and parsing step has completed or is in progress",
+        },
+      },
+      409,
+    );
+  }
+
+  const userId = problem.generatedByUserId || "unknown";
+  const result = await parseFunctionSignature(
+    problemId,
+    body.model,
+    userId,
+    c.env,
+    body.forceError,
+    body.returnDummy,
+  );
+
+  const enqueueNext = body.enqueueNextStep !== false;
+  const jobId = await startWorkflowFromStepIfEnabled(
+    c,
+    problemId,
+    "parseFunctionSignature",
+    body.model,
+    enqueueNext,
+    body.returnDummy,
+  );
+
+  return c.json(
+    { success: true as const, data: { functionSignatureSchema: result, jobId } },
+    200,
+  );
+});
+
+problems.openapi(getFunctionSignatureSchemaRoute, async (c) => {
+  const { problemId } = c.req.valid("param");
+  const result = await getFunctionSignatureSchema(problemId);
+  return c.json(
+    { success: true as const, data: { functionSignatureSchema: result } },
+    200,
+  );
+});
+
+problems.openapi(getStarterCodeRoute, async (c) => {
+  const { problemId } = c.req.valid("param");
+  const { language } = c.req.valid("query");
+
+  const schema = await getFunctionSignatureSchema(problemId);
+  if (!schema) {
+    return c.json(
+      {
+        success: false as const,
+        error: {
+          code: "PREREQUISITE_ERROR",
+          message:
+            "Function signature schema must be parsed before starter code can be generated",
+        },
+      },
+      400,
+    );
+  }
+
+  const generator = createCodeGenerator(language);
+  const starterCode = generator.generateStarterCode(schema);
+
+  return c.json(
+    { success: true as const, data: { starterCode, language } },
+    200,
+  );
 });
 
 // ============== Test Cases Routes ==============

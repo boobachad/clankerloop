@@ -28,6 +28,20 @@ export {
   getProblemText,
 } from "./src/generate-problem-text";
 
+// Function signature schema
+export {
+  parseFunctionSignature,
+  getFunctionSignatureSchema,
+} from "./src/parse-function-signature";
+
+// Code generators
+export {
+  createCodeGenerator,
+  TypeScriptGenerator,
+  PythonGenerator,
+} from "./src/code-generator";
+export type { CodeGenerator, CodeGenLanguage } from "./src/code-generator";
+
 // Test cases
 export { generateTestCases, getTestCases } from "./src/generate-test-cases";
 

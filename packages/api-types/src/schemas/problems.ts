@@ -1,4 +1,5 @@
 import { z } from "@hono/zod-openapi";
+import { FunctionSignatureSchemaSchema } from "./function-signature";
 
 // Base problem entity schema
 export const ProblemSchema = z
@@ -6,6 +7,7 @@ export const ProblemSchema = z
     id: z.string().uuid(),
     problemText: z.string(),
     functionSignature: z.string(),
+    functionSignatureSchema: FunctionSignatureSchemaSchema.nullable(),
     problemTextReworded: z.string().nullable(),
     solution: z.string().nullable(),
     generatedByModelId: z.string().uuid().nullable(),
@@ -76,6 +78,7 @@ export const ProblemTextSchema = z
     problemText: z.string(),
     functionSignature: z.string(),
     problemTextReworded: z.string(),
+    functionSignatureSchema: FunctionSignatureSchemaSchema.nullable(),
   })
   .openapi("ProblemText");
 
@@ -99,6 +102,35 @@ export const ProblemModelSchema = z
   })
   .openapi("ProblemModel");
 
+// Function signature schema response
+export const FunctionSignatureSchemaResponseSchema = z
+  .object({
+    functionSignatureSchema: FunctionSignatureSchemaSchema.nullable(),
+  })
+  .openapi("FunctionSignatureSchemaResponse");
+
+export const FunctionSignatureSchemaGenerateResponseSchema =
+  FunctionSignatureSchemaResponseSchema.extend({
+    jobId: z.string().uuid().nullable(),
+  }).openapi("FunctionSignatureSchemaGenerateResponse");
+
+// Starter code request/response
+export const StarterCodeRequestSchema = z
+  .object({
+    language: z.enum(["typescript", "python"]).openapi({
+      example: "typescript",
+      description: "The programming language for the starter code",
+    }),
+  })
+  .openapi("StarterCodeRequest");
+
+export const StarterCodeResponseSchema = z
+  .object({
+    starterCode: z.string(),
+    language: z.enum(["typescript", "python"]),
+  })
+  .openapi("StarterCodeResponse");
+
 // Inferred types
 export type Problem = z.infer<typeof ProblemSchema>;
 export type CreateProblemRequest = z.infer<typeof CreateProblemRequestSchema>;
@@ -111,3 +143,8 @@ export type CreateProblemResponse = z.infer<typeof CreateProblemResponseSchema>;
 export type ProblemText = z.infer<typeof ProblemTextSchema>;
 export type Solution = z.infer<typeof SolutionSchema>;
 export type ProblemModel = z.infer<typeof ProblemModelSchema>;
+export type FunctionSignatureSchemaResponse = z.infer<
+  typeof FunctionSignatureSchemaResponseSchema
+>;
+export type StarterCodeRequest = z.infer<typeof StarterCodeRequestSchema>;
+export type StarterCodeResponse = z.infer<typeof StarterCodeResponseSchema>;

@@ -73,6 +73,7 @@ export async function generateProblemText(
     problemText: object.problemText,
     functionSignature: object.functionSignature,
     problemTextReworded: object.problemTextReworded,
+    functionSignatureSchema: null, // Parsed in a subsequent step
   };
 }
 
@@ -82,5 +83,6 @@ export async function getProblemText(problemId: string) {
     problemText: problem.problemText,
     functionSignature: problem.functionSignature,
     problemTextReworded: problem.problemTextReworded,
+    functionSignatureSchema: problem.functionSignatureSchema,
   };
 }

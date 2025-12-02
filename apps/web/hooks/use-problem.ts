@@ -634,4 +634,39 @@ export function useProblemModel(
   };
 }
 
+export type CodeGenLanguage = "typescript" | "python";
+
+export function useStarterCode(
+  problemId: string | null,
+  language: CodeGenLanguage,
+  encryptedUserId?: string,
+) {
+  const query = useQuery({
+    queryKey: ["starterCode", problemId, language],
+    queryFn: async () => {
+      if (!problemId) throw new Error("Problem ID is not set");
+      const { getStarterCode } = await import("@/actions/get-starter-code");
+      return getStarterCode(problemId, language, encryptedUserId);
+    },
+    enabled: false, // Only fetch when explicitly called
+    staleTime: Infinity, // Starter code doesn't change
+  });
+
+  const getData = async () => {
+    if (!problemId) return Promise.reject(new Error("Problem ID is not set"));
+    try {
+      return await query.refetch();
+    } catch (error) {
+      throw error;
+    }
+  };
+
+  return {
+    isLoading: query.isFetching,
+    error: query.error,
+    data: query.data,
+    getData,
+  };
+}
+
 export type { GenerationStep };

@@ -8,6 +8,7 @@ import {
   jsonb,
   timestamp,
 } from "drizzle-orm/pg-core";
+import type { FunctionSignatureSchema } from "@repo/api-types";
 
 export const models = pgTable("models", {
   id: uuid("id").primaryKey().defaultRandom(),
@@ -18,6 +19,8 @@ export const problems = pgTable("problems", {
   id: uuid("id").primaryKey().defaultRandom(),
   problemText: text("problem_text").notNull(),
   functionSignature: text("function_signature").notNull(),
+  functionSignatureSchema:
+    jsonb("function_signature_schema").$type<FunctionSignatureSchema>(),
   problemTextReworded: text("problem_text_reworded").notNull(),
   solution: text("solution"),
   generatedByModelId: uuid("generated_by_model_id").references(() => models.id),
