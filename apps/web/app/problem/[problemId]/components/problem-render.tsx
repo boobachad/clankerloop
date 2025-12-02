@@ -23,6 +23,8 @@ import {
   useGenerationStatus,
   useModels,
   useProblemModel,
+  useStarterCode,
+  type CodeGenLanguage,
 } from "@/hooks/use-problem";
 import { Skeleton } from "@/components/ui/skeleton";
 import Link from "next/link";
@@ -46,6 +48,7 @@ import {
 } from "@/components/ui/select";
 import { useQueryClient } from "@tanstack/react-query";
 import type { GenerationStep } from "@/hooks/use-problem";
+import { getStarterCode } from "@/actions/get-starter-code";
 import {
   Collapsible,
   CollapsibleContent,
@@ -55,19 +58,13 @@ import {
 // Step order matching backend STEP_ORDER
 const STEP_ORDER: GenerationStep[] = [
   "generateProblemText",
+  "parseFunctionSignature",
   "generateTestCases",
   "generateTestCaseInputCode",
   "generateSolution",
 ];
 
 type StepStatus = "loading" | "complete" | "error" | "pending" | "not_started";
-
-function getStartingCode(language: string, functionSignature: string) {
-  if (language === "typescript") {
-    return `function runSolution${functionSignature} {\n\treturn;\n}`;
-  }
-  throw new Error(`Unsupported language: ${language}`);
-}
 
 export default function ProblemRender({
   problemId,
@@ -78,8 +75,7 @@ export default function ProblemRender({
 }) {
   const queryClient = useQueryClient();
   const [userSolution, setUserSolution] = useState<string | null>(null);
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [language, _setLanguage] = useState<string>("typescript");
+  const [language, setLanguage] = useState<CodeGenLanguage>("typescript");
   const [selectedModel, setSelectedModel] = useState<string>("");
   const [lastValidStepIndex, setLastValidStepIndex] = useState<number>(-1);
   const [openSections, setOpenSections] = useState<Record<string, boolean>>({});
@@ -94,15 +90,44 @@ export default function ProblemRender({
     generateData: callGenerateProblemText,
   } = useProblemText(problemId, user.apiKey);
 
+  const {
+    isLoading: isStarterCodeLoading,
+    error: starterCodeError,
+    data: starterCode,
+  } = useStarterCode(problemId, language, user.apiKey);
+
   useEffect(() => {
     if (!problemText) getProblemText();
   }, [getProblemText, problemText]);
 
+  // Fetch starter code when problem text is available and language changes
   useEffect(() => {
-    if (problemText?.problemText && problemText?.functionSignature) {
-      setUserSolution(getStartingCode(language, problemText.functionSignature));
+    if (problemText?.functionSignatureSchema && problemId) {
+      queryClient
+        .fetchQuery({
+          queryKey: ["starterCode", problemId, language],
+          queryFn: () => getStarterCode(problemId, language, user.apiKey),
+          staleTime: Infinity,
+        })
+        .catch((error) => {
+          // Silently handle errors - they'll be shown via the query state
+          console.error("Failed to fetch starter code:", error);
+        });
     }
-  }, [problemText, language]);
+  }, [
+    problemText?.functionSignatureSchema,
+    language,
+    problemId,
+    queryClient,
+    user.apiKey,
+  ]);
+
+  // Set user solution when starter code is fetched
+  useEffect(() => {
+    if (starterCode?.starterCode) {
+      setUserSolution(starterCode.starterCode);
+    }
+  }, [starterCode]);
 
   const {
     isLoading: isTestCasesLoading,
@@ -180,10 +205,12 @@ export default function ProblemRender({
     hasData: boolean,
   ): StepStatus => {
     if (error) return "error";
-    // If step is currently being generated, show "pending" instead of "loading"
+    // Prioritize "loading" when data is actively being fetched
+    // This ensures loading indicators show correctly during data fetching
+    if (isLoading) return "loading";
+    // If step is currently being generated but not actively fetching, show "pending"
     // This prevents oscillation between pending and loading during polling
     if (isGenerating && currentStep && currentStep === step) return "pending";
-    if (isLoading) return "loading";
     if (hasData || completedSteps.includes(step)) return "complete";
     return "not_started";
   };
@@ -238,6 +265,7 @@ export default function ProblemRender({
   const invalidateSubsequentSteps = (stepIndex: number) => {
     const queryKeys: Record<GenerationStep, string[]> = {
       generateProblemText: ["problemText", problemId],
+      parseFunctionSignature: ["functionSignatureSchema", problemId],
       generateTestCases: ["testCases", problemId],
       generateTestCaseInputCode: ["testCaseInputCode", problemId],
       generateSolution: ["solution", problemId],
@@ -334,6 +362,7 @@ export default function ProblemRender({
   const getStepDisplayName = (step: GenerationStep): string => {
     const names: Record<GenerationStep, string> = {
       generateProblemText: "Problem Text",
+      parseFunctionSignature: "Function Signature Schema",
       generateTestCases: "Test Cases",
       generateTestCaseInputCode: "Test Case Inputs",
       generateSolution: "Solution & Test Case Outputs",
@@ -695,7 +724,7 @@ export default function ProblemRender({
               </StepSection>
               <StepSection
                 step="generateTestCases"
-                stepIndex={1}
+                stepIndex={2}
                 title="Test Case Descriptions"
                 isLoading={isTestCasesLoading}
                 error={testCasesError}
@@ -729,7 +758,7 @@ export default function ProblemRender({
               </StepSection>
               <StepSection
                 step="generateTestCaseInputCode"
-                stepIndex={2}
+                stepIndex={3}
                 title="Test Case Input Code"
                 isLoading={isTestCaseInputsLoading}
                 error={testCaseInputCodeError}
@@ -801,7 +830,7 @@ export default function ProblemRender({
               </StepSection>
               <StepSection
                 step="generateSolution"
-                stepIndex={3}
+                stepIndex={4}
                 title="Solution"
                 isLoading={isGenerateSolutionLoading}
                 error={solutionError}
@@ -1079,13 +1108,39 @@ export default function ProblemRender({
         </ResizablePanel>
         <ResizableHandle withHandle />
         <ResizablePanel defaultSize={50} className="min-h-0 flex flex-col">
+          <div className="flex items-center justify-between p-2 border-b flex-shrink-0">
+            <div className="flex items-center gap-2">
+              <span className="text-sm font-medium">Language:</span>
+              <Select
+                value={language}
+                onValueChange={(value: CodeGenLanguage) => setLanguage(value)}
+                disabled={isStarterCodeLoading}
+              >
+                <SelectTrigger className="w-[140px]">
+                  <SelectValue placeholder="Select language" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="typescript">TypeScript</SelectItem>
+                  <SelectItem value="python">Python</SelectItem>
+                </SelectContent>
+              </Select>
+              {isStarterCodeLoading && (
+                <Loader2Icon className="h-4 w-4 animate-spin" />
+              )}
+            </div>
+            {starterCodeError && (
+              <span className="text-xs text-destructive">
+                Failed to load starter code
+              </span>
+            )}
+          </div>
           <div className="flex-1 min-h-0">
             {userSolution ? (
               <Editor
                 height="100%"
                 width="100%"
-                //   theme="vs-dark"
                 defaultLanguage={language}
+                language={language}
                 value={userSolution ?? ""}
                 onChange={(value) => setUserSolution(value ?? null)}
                 options={{
@@ -1093,6 +1148,10 @@ export default function ProblemRender({
                   minimap: {
                     enabled: false,
                   },
+                  readOnly: !!(
+                    isStarterCodeLoading ||
+                    (problemText?.functionSignatureSchema && !starterCode)
+                  ),
                 }}
                 loading={<Skeleton className="h-full w-full" />}
               />

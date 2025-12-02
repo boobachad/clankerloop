@@ -6,6 +6,7 @@ import {
 import { getSandbox } from "@cloudflare/sandbox";
 import {
   generateProblemText,
+  parseFunctionSignature,
   generateTestCases,
   generateTestCaseInputCode,
   generateTestCaseInputs,
@@ -69,7 +70,26 @@ export class ProblemGenerationWorkflow extends WorkflowEntrypoint<
         });
       }
 
-      // Step 2: Generate Test Cases
+      // Step 2: Parse Function Signature to Schema
+      if (shouldRunStep("parseFunctionSignature")) {
+        await step.do("parseFunctionSignature", async () => {
+          console.log(
+            `[Workflow] Processing parseFunctionSignature for problem ${problemId}`,
+          );
+          await updateJobStatus(jobId, "in_progress", "parseFunctionSignature");
+          await parseFunctionSignature(
+            problemId,
+            model,
+            userId,
+            this.env,
+            false,
+            returnDummy,
+          );
+          await markStepComplete(jobId, "parseFunctionSignature");
+        });
+      }
+
+      // Step 3: Generate Test Case Descriptions
       if (shouldRunStep("generateTestCases")) {
         await step.do("generateTestCases", async () => {
           console.log(
@@ -88,7 +108,7 @@ export class ProblemGenerationWorkflow extends WorkflowEntrypoint<
         });
       }
 
-      // Step 3: Generate Test Case Input Code and Execute to Get Inputs
+      // Step 4: Generate Test Case Input Code and Execute to Get Inputs
       if (shouldRunStep("generateTestCaseInputCode")) {
         await step.do("generateTestCaseInputCode", async () => {
           console.log(
@@ -117,7 +137,7 @@ export class ProblemGenerationWorkflow extends WorkflowEntrypoint<
         });
       }
 
-      // Step 4: Generate Solution and Execute to Get Outputs
+      // Step 5: Generate Solution and Execute to Get Outputs
       if (shouldRunStep("generateSolution")) {
         await step.do("generateSolution", async () => {
           console.log(

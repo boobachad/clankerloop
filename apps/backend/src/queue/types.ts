@@ -1,5 +1,6 @@
 export type GenerationStep =
   | "generateProblemText"
+  | "parseFunctionSignature"
   | "generateTestCases"
   | "generateTestCaseInputCode"
   | "generateSolution";
@@ -7,6 +8,7 @@ export type GenerationStep =
 // Step order for sequential execution
 export const STEP_ORDER: GenerationStep[] = [
   "generateProblemText",
+  "parseFunctionSignature",
   "generateTestCases",
   "generateTestCaseInputCode",
   "generateSolution",

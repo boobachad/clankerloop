@@ -4,6 +4,7 @@ import { z } from "@hono/zod-openapi";
 export const GenerationStepSchema = z
   .enum([
     "generateProblemText",
+    "parseFunctionSignature",
     "generateTestCases",
     "generateTestCaseInputCode",
     "generateSolution",
