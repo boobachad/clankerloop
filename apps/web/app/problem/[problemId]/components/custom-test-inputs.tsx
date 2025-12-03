@@ -161,15 +161,6 @@ export default function CustomTestInputs({
         </div>
         <div className="flex items-center gap-2">
           <Button
-            variant="ghost"
-            size="sm"
-            className="h-7 px-2"
-            onClick={handleAddTestCase}
-            disabled={customTestCases.length >= 10}
-          >
-            <PlusIcon className="h-4 w-4" />
-          </Button>
-          <Button
             variant="default"
             size="sm"
             className="h-7"
@@ -236,6 +227,15 @@ export default function CustomTestInputs({
               </TabsTrigger>
             );
           })}
+          <Button
+            variant="ghost"
+            size="sm"
+            className="h-auto px-2 py-2 rounded-none border-b-2 border-transparent"
+            onClick={handleAddTestCase}
+            disabled={customTestCases.length >= 10}
+          >
+            <PlusIcon className="h-4 w-4" /> Add Test Case
+          </Button>
         </TabsList>
 
         {customTestCases.map((testCase, index) => {
