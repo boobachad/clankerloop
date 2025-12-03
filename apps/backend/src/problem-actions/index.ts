@@ -66,6 +66,7 @@ export { generateSolution, getSolution } from "./src/generate-solution";
 export {
   generateTestCaseOutputs,
   getTestCaseOutputs,
+  runReferenceSolutionOnInput,
 } from "./src/generate-test-case-outputs";
 
 // Run user solution

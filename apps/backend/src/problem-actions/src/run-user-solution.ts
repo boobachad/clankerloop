@@ -2,6 +2,7 @@ import { Sandbox } from "./sandbox";
 import { getProblem } from "@repo/db";
 import { getLanguageConfig, getRunnerTemplate } from "./runners";
 import type { TestResult, SupportedLanguage, CustomTestResult } from "./types";
+import { runReferenceSolutionOnInput } from "./generate-test-case-outputs";
 
 const WORK_DIR = ".";
 
@@ -75,6 +76,7 @@ export async function runUserSolution(
             testCase,
             status: "error",
             actual: null,
+            expected: testCase.expected,
             error:
               "Execution failed. Please abide by the given function signature and structure.",
           });
@@ -99,6 +101,7 @@ export async function runUserSolution(
             testCase,
             status: "error",
             actual: null,
+            expected: testCase.expected,
             error:
               "Execution failed. Please abide by the given function signature and structure.",
           });
@@ -116,6 +119,7 @@ export async function runUserSolution(
             testCase,
             status: "error",
             actual: null,
+            expected: testCase.expected,
             error: errorWithTrace,
             stdout: outputData.stdout,
           });
@@ -131,6 +135,7 @@ export async function runUserSolution(
             testCase,
             status,
             actual: outputData.result,
+            expected: testCase.expected,
             stdout: outputData.stdout,
           });
           continue;
@@ -146,6 +151,7 @@ export async function runUserSolution(
           testCase,
           status: "error",
           actual: null,
+          expected: testCase.expected,
           error:
             "Execution failed. Please abide by the given function signature and structure.",
         });
@@ -154,6 +160,7 @@ export async function runUserSolution(
           testCase,
           status: "error",
           actual: null,
+          expected: testCase.expected,
           error: error instanceof Error ? error.message : String(error),
         });
       }
@@ -222,22 +229,17 @@ export async function runUserSolutionWithCustomInputs(
   const config = getLanguageConfig(language);
   const runnerTemplate = getRunnerTemplate(language);
 
-  const referenceSolutionPath = `${WORK_DIR}/reference.${config.extension}`;
   const userSolutionPath = `${WORK_DIR}/user.${config.extension}`;
   const runnerPath = `${WORK_DIR}/runner.${config.extension}`;
   const inputPath = `${WORK_DIR}/input.json`;
   const outputPath = `${WORK_DIR}/output.json`;
 
-  const preparedReferenceSolution = config.prepareCode(referenceSolution);
   const preparedUserCode = config.prepareCode(userCode);
   const results: CustomTestResult[] = [];
 
   try {
-    // Upload both solutions and runner once upfront
-    await sandbox.uploadFile(
-      Buffer.from(preparedReferenceSolution, "utf-8"),
-      referenceSolutionPath,
-    );
+    // Upload user solution and runner once upfront
+    // Reference solution is executed via runReferenceSolutionOnInput() which uses inline execution
     await sandbox.uploadFile(
       Buffer.from(preparedUserCode, "utf-8"),
       userSolutionPath,
@@ -255,28 +257,8 @@ export async function runUserSolutionWithCustomInputs(
       const inputJson = JSON.stringify(input);
       await sandbox.uploadFile(Buffer.from(inputJson, "utf-8"), inputPath);
 
-      // Run reference solution to get expected output
-      let expected: unknown | null = null;
-      try {
-        // Copy reference solution to solution.ext (what runner expects)
-        await sandbox.executeCommand(
-          `cp ${referenceSolutionPath} solution.${config.extension}`,
-          WORK_DIR,
-        );
-
-        const refCommand = `${config.runCommand} runner.${config.extension} input.json`;
-        const refResult = await sandbox.executeCommand(refCommand, WORK_DIR);
-
-        if (refResult.exitCode === 0) {
-          const refOutputContent = await sandbox.readFile(outputPath);
-          const refOutputData = JSON.parse(refOutputContent);
-          if (refOutputData.success === true) {
-            expected = refOutputData.result;
-          }
-        }
-      } catch {
-        // Reference solution failed, expected stays null
-      }
+      // Run reference solution to get expected output using the abstracted function
+      const expected = await runReferenceSolutionOnInput(problemId, input, sandbox);
 
       // Run user solution
       try {

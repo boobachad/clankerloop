@@ -211,7 +211,7 @@ export default function ProblemRender({
     step: GenerationStep,
     isLoading: boolean,
     error: unknown,
-    hasData: boolean,
+    hasData: boolean
   ): StepStatus => {
     if (error) return "error";
     // Prioritize "loading" when data is actively being fetched
@@ -230,7 +230,7 @@ export default function ProblemRender({
     stepIndex: number,
     isLoading: boolean,
     error: unknown,
-    hasData: boolean,
+    hasData: boolean
   ): boolean => {
     const stepStatus = getStepStatus(step, isLoading, error, hasData);
 
@@ -530,7 +530,7 @@ export default function ProblemRender({
       stepIndex,
       isLoading,
       error,
-      hasData,
+      hasData
     );
 
     if (!isVisible) return null;
@@ -782,7 +782,7 @@ export default function ProblemRender({
                     selectedModel,
                     false,
                     true,
-                    false,
+                    false
                   )
                 }
                 onGenerateWithError={() =>
@@ -790,7 +790,7 @@ export default function ProblemRender({
                     selectedModel,
                     true,
                     true,
-                    false,
+                    false
                   )
                 }
                 onRefetch={getCodeToGenerateTestCaseInputs}
@@ -855,7 +855,7 @@ export default function ProblemRender({
                     undefined,
                     true,
                     false,
-                    false,
+                    false
                   )
                 }
                 onGenerateWithError={() =>
@@ -864,7 +864,7 @@ export default function ProblemRender({
                     undefined,
                     true,
                     true,
-                    false,
+                    false
                   )
                 }
                 onRefetch={getSolution}
@@ -966,23 +966,78 @@ export default function ProblemRender({
                   </Alert>
                 )}
                 {userSolutionTestResults && (
-                  <div className="space-y-1">
+                  <div className="space-y-2">
                     {userSolutionTestResults.map((testResult, i) => (
                       <div
                         key={`user-solution-test-result-${i}`}
-                        className="text-sm font-mono bg-muted p-2 rounded"
+                        className="border rounded-lg p-3 bg-muted/30"
                       >
-                        {JSON.stringify(
-                          {
-                            testCase: testResult.testCase.description,
-                            status: testResult.status,
-                            actual: testResult.actual,
-                            error: testResult.error,
-                            expected: testResult.testCase.expected,
-                            stdout: testResult.stdout,
-                          },
-                          null,
-                          2,
+                        <div className="text-xs font-medium text-muted-foreground mb-2">
+                          {testResult.testCase.description}
+                          {testResult.testCase.isEdgeCase && (
+                            <Badge variant="outline" className="ml-2">
+                              Edge Case
+                            </Badge>
+                          )}
+                        </div>
+                        {testResult.error ? (
+                          <Alert variant="destructive" className="py-2">
+                            <AlertTitle className="text-xs">Error</AlertTitle>
+                            <AlertDescription className="text-xs whitespace-pre-wrap">
+                              {testResult.error}
+                            </AlertDescription>
+                          </Alert>
+                        ) : (
+                          <div
+                            className={`p-2 rounded text-xs font-mono ${
+                              testResult.status === "pass"
+                                ? "bg-green-500/20 border border-green-500/50"
+                                : testResult.status === "fail"
+                                  ? "bg-yellow-500/20 border border-yellow-500/50"
+                                  : "bg-red-500/20 border border-red-500/50"
+                            }`}
+                          >
+                            <div className="space-y-1">
+                              <div>
+                                <span className="text-muted-foreground">
+                                  Status:{" "}
+                                </span>
+                                <span className="font-semibold">
+                                  {testResult.status.toUpperCase()}
+                                </span>
+                              </div>
+                              {testResult.expected !== null && (
+                                <div>
+                                  <span className="text-muted-foreground">
+                                    Expected:{" "}
+                                  </span>
+                                  <span className="font-semibold">
+                                    {JSON.stringify(testResult.expected)}
+                                  </span>
+                                </div>
+                              )}
+                              {testResult.actual !== null && (
+                                <div>
+                                  <span className="text-muted-foreground">
+                                    Actual:{" "}
+                                  </span>
+                                  <span className="font-semibold">
+                                    {JSON.stringify(testResult.actual)}
+                                  </span>
+                                </div>
+                              )}
+                              {testResult.stdout && (
+                                <div className="mt-2 pt-2 border-t">
+                                  <span className="text-muted-foreground">
+                                    Stdout:{" "}
+                                  </span>
+                                  <pre className="text-xs mt-1 whitespace-pre-wrap">
+                                    {testResult.stdout}
+                                  </pre>
+                                </div>
+                              )}
+                            </div>
+                          </div>
                         )}
                       </div>
                     ))}
@@ -1214,7 +1269,7 @@ export default function ProblemRender({
 
                         for (let i = 0; i < customTestCases.length; i++) {
                           const testCase = customTestCases[i];
-                          if (!testCase.inputText.trim()) {
+                          if (!testCase || !testCase.inputText.trim()) {
                             hasError = true;
                             break;
                           }
@@ -1351,7 +1406,7 @@ export default function ProblemRender({
                             selectedModel,
                             false,
                             true,
-                            false,
+                            false
                           );
                         if (generatedSolution) {
                           setUserSolution(generatedSolution);
@@ -1382,7 +1437,7 @@ export default function ProblemRender({
                             selectedModel,
                             false,
                             true,
-                            true,
+                            true
                           );
                         if (generatedSolution) {
                           setUserSolution(generatedSolution);

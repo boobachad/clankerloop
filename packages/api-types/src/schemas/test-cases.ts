@@ -90,6 +90,7 @@ export const TestResultSchema = z
     testCase: TestCaseSchema,
     status: z.enum(["pass", "fail", "error"]),
     actual: z.unknown().nullable(),
+    expected: z.unknown().nullable(),
     error: z.string().optional(),
     stdout: z.string().optional(),
   })
