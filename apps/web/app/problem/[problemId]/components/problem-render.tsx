@@ -736,6 +736,11 @@ export default function ProblemRender({
                         className="text-sm"
                       >
                         {testCase.description}
+                        {testCase.isSampleCase === true && (
+                          <Badge variant="default" className="ml-2">
+                            Sample
+                          </Badge>
+                        )}
                         {testCase.isEdgeCase && (
                           <Badge variant="outline" className="ml-2">
                             Edge Case

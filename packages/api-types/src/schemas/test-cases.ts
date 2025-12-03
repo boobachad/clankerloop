@@ -7,6 +7,7 @@ export const TestCaseSchema = z
     problemId: z.string().uuid(),
     description: z.string(),
     isEdgeCase: z.boolean(),
+    isSampleCase: z.boolean(),
     inputCode: z.string().nullable(),
     input: z.unknown().nullable(),
     expected: z.unknown().nullable(),
@@ -20,6 +21,7 @@ export const TestCaseDescriptionSchema = z
   .object({
     description: z.string(),
     isEdgeCase: z.boolean(),
+    isSampleCase: z.boolean(),
   })
   .openapi("TestCaseDescription");
 
@@ -32,7 +34,7 @@ export const TestCaseDescriptionListSchema = z
   .array(TestCaseDescriptionSchema)
   .openapi("TestCaseDescriptionList");
 
-// generateTestCases returns array of { description, isEdgeCase }
+// generateTestCases returns array of { description, isEdgeCase, isSampleCase }
 export const TestCasesGenerateResponseSchema = z
   .object({
     testCases: TestCaseDescriptionListSchema,

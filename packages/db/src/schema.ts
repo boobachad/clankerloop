@@ -37,6 +37,7 @@ export const testCases = pgTable("test_cases", {
     .references(() => problems.id, { onDelete: "cascade" }),
   description: text("description").notNull(),
   isEdgeCase: boolean("is_edge_case").default(false).notNull(),
+  isSampleCase: boolean("is_sample_case").default(false).notNull(),
   inputCode: text("input_code"),
   input: jsonb("input"),
   expected: jsonb("expected"),
