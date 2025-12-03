@@ -153,7 +153,7 @@ export default function ProblemRender({
     problemId,
     userSolution,
     language,
-    user.apiKey,
+    user.apiKey
   );
 
   const {
@@ -416,7 +416,7 @@ export default function ProblemRender({
                   <Button
                     variant="outline"
                     size="sm"
-                    className="h-7"
+                    className="h-7 bg-secondary"
                     onClick={async () => {
                       if (runCustomTestsRef.current) {
                         await runCustomTestsRef.current();
@@ -430,7 +430,7 @@ export default function ProblemRender({
                     ) : (
                       <PlayIcon className="h-4 w-4 mr-1" />
                     )}
-                    Run Custom Tests
+                    Run
                   </Button>
                   <Button
                     variant="default"
@@ -445,15 +445,19 @@ export default function ProblemRender({
                     ) : (
                       <SendIcon className="h-4 w-4 mr-1" />
                     )}
-                    Submit Solution
+                    Submit
                   </Button>
-                  <AlertDialog open={showSubmitDialog} onOpenChange={setShowSubmitDialog}>
+                  <AlertDialog
+                    open={showSubmitDialog}
+                    onOpenChange={setShowSubmitDialog}
+                  >
                     <AlertDialogContent>
                       <AlertDialogHeader>
                         <AlertDialogTitle>Submit Solution?</AlertDialogTitle>
                         <AlertDialogDescription>
-                          This will run your solution against all test cases and submit it for evaluation. 
-                          Make sure you've tested your solution with custom test cases first.
+                          This will run your solution against all test cases and
+                          submit it for evaluation. Make sure you&apos;ve tested
+                          your solution with custom test cases first.
                         </AlertDialogDescription>
                       </AlertDialogHeader>
                       <AlertDialogFooter>
@@ -464,7 +468,10 @@ export default function ProblemRender({
                               await callRunUserSolution();
                               setShowSubmitDialog(false);
                             } catch (error) {
-                              console.error("Failed to run user solution:", error);
+                              console.error(
+                                "Failed to run user solution:",
+                                error
+                              );
                               setShowSubmitDialog(false);
                             }
                           }}
