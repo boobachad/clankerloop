@@ -456,10 +456,9 @@ export default function ProblemRender({
         <ResizableHandle withHandle />
         <ResizablePanel defaultSize={50} className="min-h-0 flex flex-col">
           <ResizablePanelGroup direction="vertical" className="flex-1">
-            <ResizablePanel defaultSize={65} className="min-h-0 flex flex-col">
+            <ResizablePanel defaultSize={50} className="min-h-0 flex flex-col">
               <div className="flex items-center justify-between p-2 border-b flex-shrink-0">
                 <div className="flex items-center gap-2">
-                  <span className="text-sm font-medium">Language:</span>
                   <Select
                     value={language}
                     onValueChange={(value: CodeGenLanguage) =>
@@ -550,7 +549,7 @@ export default function ProblemRender({
               </div>
             </ResizablePanel>
             <ResizableHandle withHandle />
-            <ResizablePanel defaultSize={35} className="min-h-0">
+            <ResizablePanel defaultSize={50} className="min-h-0">
               <CustomTestInputs
                 problemId={problemId}
                 testCases={testCases}
