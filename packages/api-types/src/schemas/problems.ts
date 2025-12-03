@@ -18,6 +18,17 @@ export const ProblemSchema = z
   .openapi("Problem");
 
 // Request schemas
+export const StartFromSchema = z
+  .object({
+    problemId: z.string().uuid().openapi({
+      description: "ID of existing problem to base this new problem on",
+    }),
+    direction: z.enum(["easier", "harder"]).openapi({
+      description: "Direction to adjust difficulty",
+    }),
+  })
+  .openapi("StartFrom");
+
 export const CreateProblemRequestSchema = z
   .object({
     model: z.string().min(1).openapi({ example: "claude-3-5-sonnet-20241022" }),
@@ -25,6 +36,10 @@ export const CreateProblemRequestSchema = z
       description:
         "If true, return dummy data matching the expected schema instead of calling generateObject",
       example: false,
+    }),
+    startFrom: StartFromSchema.optional().openapi({
+      description:
+        "Create problem based on existing problem with adjusted difficulty",
     }),
   })
   .openapi("CreateProblemRequest");
@@ -166,6 +181,7 @@ export const StarterCodeResponseSchema = z
 
 // Inferred types
 export type Problem = z.infer<typeof ProblemSchema>;
+export type StartFrom = z.infer<typeof StartFromSchema>;
 export type CreateProblemRequest = z.infer<typeof CreateProblemRequestSchema>;
 export type GenerateRequest = z.infer<typeof GenerateRequestSchema>;
 export type GenerateSolutionRequest = z.infer<

@@ -31,7 +31,9 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { Skeleton } from "@/components/ui/skeleton";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { ClientFacingUserObject } from "@/lib/auth-types";
+import { createProblem } from "@/actions/create-problem";
 import { signOutAction } from "@/app/(auth)/signout";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
@@ -77,6 +79,7 @@ export default function ProblemRender({
   problemId: string;
   user: ClientFacingUserObject;
 }) {
+  const router = useRouter();
   const queryClient = useQueryClient();
   const [userSolution, setUserSolution] = useState<string | null>(null);
   const [language, setLanguage] = useState<CodeGenLanguage>("typescript");
@@ -89,6 +92,7 @@ export default function ProblemRender({
     Array<{ id: string; inputText: string }>
   >([{ id: `test-case-${Date.now()}`, inputText: "" }]);
   const hasInitializedCustomTestCases = useRef(false);
+  const [isAdjustingDifficulty, setIsAdjustingDifficulty] = useState(false);
 
   const {
     isLoading: isProblemTextLoading,
@@ -691,6 +695,25 @@ export default function ProblemRender({
     );
   };
 
+  const handleAdjustDifficulty = async (direction: "easier" | "harder") => {
+    if (!selectedModel) return;
+    setIsAdjustingDifficulty(true);
+    try {
+      const result = await createProblem(
+        selectedModel,
+        user.apiKey,
+        true,
+        undefined,
+        { problemId, direction },
+      );
+      router.push(`/problem/${result.problemId}`);
+    } catch (error) {
+      console.error("Failed to adjust difficulty:", error);
+    } finally {
+      setIsAdjustingDifficulty(false);
+    }
+  };
+
   return (
     <div className="h-screen w-screen flex flex-col overflow-hidden">
       <div className="w-full p-4 flex items-center justify-between gap-4 border-b flex-shrink-0">
@@ -721,6 +744,24 @@ export default function ProblemRender({
               Sign out
             </Button>
           </form>
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => handleAdjustDifficulty("easier")}
+              disabled={isAdjustingDifficulty || !selectedModel}
+            >
+              {isAdjustingDifficulty ? "Creating..." : "Make Easier"}
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => handleAdjustDifficulty("harder")}
+              disabled={isAdjustingDifficulty || !selectedModel}
+            >
+              {isAdjustingDifficulty ? "Creating..." : "Make Harder"}
+            </Button>
+          </div>
         </div>
         <div className="flex items-center gap-4">
           <Avatar>

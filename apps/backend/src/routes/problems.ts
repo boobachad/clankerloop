@@ -122,6 +122,7 @@ async function startWorkflowIfAuto(
   model?: string,
   autoGenerate: boolean = true,
   returnDummy?: boolean,
+  baseProblem?: { problemText: string; direction: "easier" | "harder" },
 ): Promise<string | null> {
   if (!autoGenerate) return null;
 
@@ -137,6 +138,7 @@ async function startWorkflowIfAuto(
       problemId,
       model: model || "",
       returnDummy,
+      baseProblem,
     },
   });
 
@@ -246,7 +248,31 @@ problems.openapi(createProblemRoute, async (c) => {
   const body = c.req.valid("json");
   const query = c.req.valid("query");
 
-  const problemId = await createProblem({ generatedByUserId: userId });
+  // Handle difficulty adjustment if startFrom is provided
+  let baseProblem: { problemText: string; direction: "easier" | "harder" } | undefined;
+  let problemCreateData: { generatedByUserId: string; easierThan?: string; harderThan?: string } = {
+    generatedByUserId: userId,
+  };
+
+  if (body.startFrom) {
+    // Fetch the original problem to get its text
+    const originalProblem = await getProblem(body.startFrom.problemId);
+    baseProblem = {
+      problemText: originalProblem.problemText,
+      direction: body.startFrom.direction,
+    };
+
+    // Set the FK based on direction
+    if (body.startFrom.direction === "harder") {
+      // New problem is harder, so the original is easier
+      problemCreateData.easierThan = body.startFrom.problemId;
+    } else {
+      // New problem is easier, so the original is harder
+      problemCreateData.harderThan = body.startFrom.problemId;
+    }
+  }
+
+  const problemId = await createProblem(problemCreateData);
 
   // Get or create model and update problem
   const modelId = await getOrCreateModel(body.model);
@@ -259,6 +285,7 @@ problems.openapi(createProblemRoute, async (c) => {
     body.model,
     autoGenerate,
     body.returnDummy,
+    baseProblem,
   );
 
   return c.json({ success: true as const, data: { problemId, jobId } }, 200);

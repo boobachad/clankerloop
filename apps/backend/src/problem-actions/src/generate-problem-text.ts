@@ -10,6 +10,7 @@ export async function generateProblemText(
   env: Env,
   forceError?: boolean,
   returnDummy?: boolean,
+  baseProblem?: { problemText: string; direction: "easier" | "harder" },
 ) {
   if (forceError) {
     throw new Error("Force error: generateObject call skipped");
@@ -31,9 +32,29 @@ export async function generateProblemText(
     };
   } else {
     const tracedModel = getTracedClient(model, userId, problemId, model, env);
-    const result = await generateObject({
-      model: tracedModel,
-      prompt: `Generate a coding problem for a LeetCode-style platform. ONLY return the problem text, no other text.
+
+    // Build prompt based on whether we're creating a new problem or adjusting difficulty
+    let prompt: string;
+    if (baseProblem) {
+      prompt = `You are adjusting the difficulty of an existing coding problem.
+
+Original problem:
+${baseProblem.problemText}
+
+Create a ${baseProblem.direction} version of this problem while keeping the same general concept/theme.
+${baseProblem.direction === "easier" ? "- Simplify constraints, reduce edge cases, use smaller inputs, require simpler algorithms" : "- Add constraints, more edge cases, require optimization, larger inputs, more complex algorithms"}
+
+ONLY return the problem text, no other text.
+DO NOT INCLUDE TEST CASES. JUST THE PROBLEM TEXT.
+DO NOT INCLUDE EXAMPLE INPUTS AND OUTPUTS.
+DO NOT INCLUDE ANYTHING BUT THE PROBLEM TEXT.
+Generate a function signature for the function using TypeScript types.
+If using custom types, THEY MUST BE DEFINED INLINE -- for example,
+
+(nums: number[], k: number, customType: {something: string; anotherThing: number}): number
+`;
+    } else {
+      prompt = `Generate a coding problem for a LeetCode-style platform. ONLY return the problem text, no other text.
 	DO NOT INCLUDE TEST CASES. JUST THE PROBLEM TEXT.
 	DO NOT INCLUDE EXAMPLE INPUTS AND OUTPUTS.
 	DO NOT INCLUDE ANYTHING BUT THE PROBLEM TEXT.
@@ -41,7 +62,12 @@ export async function generateProblemText(
 	If using custom types, THEY MUST BE DEFINED INLINE -- for example,
 
 	(nums: number[], k: number, customType: {something: string; anotherThing: number}): number
-	`,
+	`;
+    }
+
+    const result = await generateObject({
+      model: tracedModel,
+      prompt,
       schema: z.object({
         problemText: z
           .string()

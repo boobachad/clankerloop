@@ -24,6 +24,7 @@ type WorkflowParams = {
   model: string;
   returnDummy?: boolean;
   startingStep?: GenerationStep; // Optional: skip steps before this one
+  baseProblem?: { problemText: string; direction: "easier" | "harder" }; // For difficulty adjustment
 };
 
 export class ProblemGenerationWorkflow extends WorkflowEntrypoint<
@@ -31,7 +32,7 @@ export class ProblemGenerationWorkflow extends WorkflowEntrypoint<
   WorkflowParams
 > {
   async run(event: WorkflowEvent<WorkflowParams>, step: WorkflowStep) {
-    const { jobId, problemId, model, returnDummy, startingStep } =
+    const { jobId, problemId, model, returnDummy, startingStep, baseProblem } =
       event.payload;
 
     // Helper to check if step should be skipped
@@ -65,6 +66,7 @@ export class ProblemGenerationWorkflow extends WorkflowEntrypoint<
             this.env,
             false,
             returnDummy,
+            baseProblem,
           );
           await markStepComplete(jobId, "generateProblemText");
         });
