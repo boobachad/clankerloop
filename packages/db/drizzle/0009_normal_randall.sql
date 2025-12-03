@@ -1,0 +1,1 @@
+ALTER TABLE "test_cases" ADD COLUMN "is_sample_case" boolean DEFAULT false NOT NULL;

@@ -16,17 +16,41 @@ export async function generateTestCases(
   }
 
   let object: {
-    testCases: Array<{ description: string; isEdgeCase: boolean }>;
+    testCases: Array<{
+      description: string;
+      isEdgeCase: boolean;
+      isSampleCase: boolean;
+    }>;
   };
 
   if (returnDummy) {
     object = {
       testCases: [
-        { description: "an array with positive numbers", isEdgeCase: false },
-        { description: "an empty array", isEdgeCase: true },
-        { description: "an array with negative numbers", isEdgeCase: false },
-        { description: "an array with a single element", isEdgeCase: true },
-        { description: "an array with all zeros", isEdgeCase: true },
+        {
+          description: "an array with positive numbers",
+          isEdgeCase: false,
+          isSampleCase: true,
+        },
+        {
+          description: "an empty array",
+          isEdgeCase: true,
+          isSampleCase: false,
+        },
+        {
+          description: "an array with negative numbers",
+          isEdgeCase: false,
+          isSampleCase: false,
+        },
+        {
+          description: "an array with a single element",
+          isEdgeCase: true,
+          isSampleCase: false,
+        },
+        {
+          description: "an array with all zeros",
+          isEdgeCase: true,
+          isSampleCase: false,
+        },
       ],
     };
   } else {
@@ -37,7 +61,8 @@ export async function generateTestCases(
       prompt: `You're given the problem text: ${JSON.stringify(problemText)}. Generate NATURAL LANGUAGE test case DESCRIPTIONS for the problem.
 	DO NOT SPECIFY THE INPUTS AND OUTPUTS. JUST THE DESCRIPTIONS -- as in, "an array of numbers", "an empty array", "a string with a length of 10", etc.
 	Generate AT MOST 15 test cases encompassing a good mix of basic, edge, and corner cases.
-	DO NOT MAKE TEST CASES THAT HAVE INVALID INPUT/OUTPUT TYPES.`,
+	DO NOT MAKE TEST CASES THAT HAVE INVALID INPUT/OUTPUT TYPES.
+	YOU MUST INCLUDE AT LEAST ONE SAMPLE CASE (isSampleCase: true). Sample cases help users understand examples of the problem.`,
       schema: z.object({
         testCases: z
           .array(
@@ -53,13 +78,20 @@ export async function generateTestCases(
               isSampleCase: z
                 .boolean()
                 .describe(
-                  "Whether this is a sample case or not. Only up to 3 sample cases are allowed; these should only help the user understand examples of the problem.",
+                  "Whether this is a sample case or not. Only up to 3 sample cases are allowed; these should only help the user understand examples of the problem. AT LEAST ONE test case must be a sample case.",
                 ),
             }),
           )
           .describe("A list of test case descriptions")
           .min(5)
-          .max(15),
+          .max(15)
+          .refine(
+            (testCases) => testCases.some((tc) => tc.isSampleCase === true),
+            {
+              message:
+                "At least one test case must be a sample case (isSampleCase: true)",
+            },
+          ),
       }),
     });
     object = result.object;
@@ -70,6 +102,7 @@ export async function generateTestCases(
     object.testCases.map((tc) => ({
       description: tc.description,
       isEdgeCase: tc.isEdgeCase,
+      isSampleCase: tc.isSampleCase,
       inputCode: "",
       input: [],
       expected: null,
