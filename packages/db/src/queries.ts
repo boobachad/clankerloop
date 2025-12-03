@@ -7,6 +7,7 @@ import {
   generationJobs,
   focusAreas,
   problemFocusAreas,
+  userProblemAttempts,
   type Model,
   type Problem,
   type TestCase,
@@ -19,6 +20,8 @@ import {
   type NewFocusArea,
   type ProblemFocusArea,
   type NewProblemFocusArea,
+  type UserProblemAttempt,
+  type NewUserProblemAttempt,
 } from "./schema";
 
 // Re-export types for convenience
@@ -35,6 +38,8 @@ export type {
   NewFocusArea,
   ProblemFocusArea,
   NewProblemFocusArea,
+  UserProblemAttempt,
+  NewUserProblemAttempt,
 };
 
 // Re-export Database type
@@ -420,4 +425,49 @@ export async function linkFocusAreasToProblem(
       focusAreaId,
     })),
   );
+}
+
+// User Problem Attempt functions
+
+export async function createUserProblemAttempt(
+  data: {
+    userId: string;
+    problemId: string;
+    submissionCode: string;
+    submissionLanguage: string;
+  },
+  db?: Database,
+): Promise<string> {
+  const database = getDb(db);
+  const [result] = await database
+    .insert(userProblemAttempts)
+    .values({
+      userId: data.userId,
+      problemId: data.problemId,
+      submissionCode: data.submissionCode,
+      submissionLanguage: data.submissionLanguage,
+      status: "attempt",
+    })
+    .returning({ id: userProblemAttempts.id });
+
+  if (!result || !result.id) {
+    throw new Error(`Failed to create user problem attempt`);
+  }
+
+  return result.id;
+}
+
+export async function updateUserProblemAttemptStatus(
+  attemptId: string,
+  status: "attempt" | "run" | "pass",
+  db?: Database,
+): Promise<void> {
+  const database = getDb(db);
+  await database
+    .update(userProblemAttempts)
+    .set({
+      status,
+      updatedAt: new Date(),
+    })
+    .where(eq(userProblemAttempts.id, attemptId));
 }

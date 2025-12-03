@@ -85,6 +85,7 @@ export const modelsRelations = relations(models, ({ many }) => ({
 export const problemsRelations = relations(problems, ({ many, one }) => ({
   testCases: many(testCases),
   problemFocusAreas: many(problemFocusAreas),
+  userProblemAttempts: many(userProblemAttempts),
   generatedByModel: one(models, {
     fields: [problems.generatedByModelId],
     references: [models.id],
@@ -134,6 +135,26 @@ export const generationJobStatus = pgEnum("generation_job_status", [
   "failed",
 ]);
 
+// User Problem Attempts
+export const userProblemAttemptStatus = pgEnum("user_problem_attempt_status", [
+  "attempt",
+  "run",
+  "pass",
+]);
+
+export const userProblemAttempts = pgTable("user_problem_attempts", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  userId: text("user_id").notNull(),
+  problemId: uuid("problem_id")
+    .notNull()
+    .references(() => problems.id, { onDelete: "cascade" }),
+  submissionCode: text("submission_code").notNull(),
+  submissionLanguage: text("submission_language").notNull(),
+  status: userProblemAttemptStatus("status").notNull().default("attempt"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
 export const generationJobs = pgTable("generation_jobs", {
   id: uuid("id").primaryKey().defaultRandom(),
   problemId: uuid("problem_id")
@@ -159,6 +180,16 @@ export const generationJobsRelations = relations(generationJobs, ({ one }) => ({
   }),
 }));
 
+export const userProblemAttemptsRelations = relations(
+  userProblemAttempts,
+  ({ one }) => ({
+    problem: one(problems, {
+      fields: [userProblemAttempts.problemId],
+      references: [problems.id],
+    }),
+  }),
+);
+
 // Type exports
 export type Model = typeof models.$inferSelect;
 export type NewModel = typeof models.$inferInsert;
@@ -172,3 +203,5 @@ export type FocusArea = typeof focusAreas.$inferSelect;
 export type NewFocusArea = typeof focusAreas.$inferInsert;
 export type ProblemFocusArea = typeof problemFocusAreas.$inferSelect;
 export type NewProblemFocusArea = typeof problemFocusAreas.$inferInsert;
+export type UserProblemAttempt = typeof userProblemAttempts.$inferSelect;
+export type NewUserProblemAttempt = typeof userProblemAttempts.$inferInsert;

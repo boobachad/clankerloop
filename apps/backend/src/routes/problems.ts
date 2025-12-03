@@ -40,6 +40,8 @@ import {
   getFocusAreasByIds,
   getFocusAreasForProblem,
   linkFocusAreasToProblem,
+  createUserProblemAttempt,
+  updateUserProblemAttemptStatus,
   type FocusArea,
 } from "@repo/db";
 import { STEP_ORDER, type GenerationStep } from "../queue/types";
@@ -1055,8 +1057,29 @@ problems.openapi(getSolutionRoute, async (c) => {
 
 problems.openapi(runSolutionRoute, async (c) => {
   const db = c.get("db");
+  const userId = c.get("userId");
   const { problemId } = c.req.valid("param");
   const body = c.req.valid("json");
+
+  if (!userId || typeof userId !== "string") {
+    throw new HTTPException(500, {
+      message: "User ID not found in context",
+    });
+  }
+
+  // Create attempt record with status "attempt"
+  const attemptId = await createUserProblemAttempt(
+    {
+      userId,
+      problemId,
+      submissionCode: body.code,
+      submissionLanguage: body.language,
+    },
+    db,
+  );
+
+  // Update status to "run" when execution starts
+  await updateUserProblemAttemptStatus(attemptId, "run", db);
 
   const sandboxId = `solution-run-${problemId}`;
   const sandbox = getSandboxInstance(c.env, sandboxId);
@@ -1068,13 +1091,43 @@ problems.openapi(runSolutionRoute, async (c) => {
     db,
     language,
   );
+
+  // Check if all tests passed
+  const allTestsPassed = result.every(
+    (testResult) => testResult.status === "pass",
+  );
+  if (allTestsPassed) {
+    await updateUserProblemAttemptStatus(attemptId, "pass", db);
+  }
+
   return c.json({ success: true as const, data: result }, 200);
 });
 
 problems.openapi(runCustomTestsRoute, async (c) => {
   const db = c.get("db");
+  const userId = c.get("userId");
   const { problemId } = c.req.valid("param");
   const body = c.req.valid("json");
+
+  if (!userId || typeof userId !== "string") {
+    throw new HTTPException(500, {
+      message: "User ID not found in context",
+    });
+  }
+
+  // Create attempt record with status "attempt"
+  const attemptId = await createUserProblemAttempt(
+    {
+      userId,
+      problemId,
+      submissionCode: body.code,
+      submissionLanguage: body.language,
+    },
+    db,
+  );
+
+  // Update status to "run" when execution starts
+  await updateUserProblemAttemptStatus(attemptId, "run", db);
 
   const sandboxId = `custom-run-${problemId}-${Date.now()}`;
   const sandbox = getSandboxInstance(c.env, sandboxId);
@@ -1087,6 +1140,20 @@ problems.openapi(runCustomTestsRoute, async (c) => {
     db,
     language,
   );
+
+  // For custom tests, check if all results have no errors and actual matches expected
+  const allTestsPassed =
+    result.every(
+      (testResult) =>
+        !testResult.error &&
+        testResult.actual !== null &&
+        JSON.stringify(testResult.actual) ===
+          JSON.stringify(testResult.expected),
+    ) && result.length > 0;
+  if (allTestsPassed) {
+    await updateUserProblemAttemptStatus(attemptId, "pass", db);
+  }
+
   return c.json({ success: true as const, data: result }, 200);
 });
 
