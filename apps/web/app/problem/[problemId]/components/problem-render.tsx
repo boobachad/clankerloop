@@ -192,7 +192,7 @@ export default function ProblemRender({
     step: GenerationStep,
     isLoading: boolean,
     error: unknown,
-    hasData: boolean
+    hasData: boolean,
   ): StepStatus => {
     if (error) return "error";
     // Prioritize "loading" when data is actively being fetched
@@ -211,7 +211,7 @@ export default function ProblemRender({
     stepIndex: number,
     isLoading: boolean,
     error: unknown,
-    hasData: boolean
+    hasData: boolean,
   ): boolean => {
     const stepStatus = getStepStatus(step, isLoading, error, hasData);
 
@@ -511,7 +511,7 @@ export default function ProblemRender({
       stepIndex,
       isLoading,
       error,
-      hasData
+      hasData,
     );
 
     if (!isVisible) return null;
@@ -758,7 +758,7 @@ export default function ProblemRender({
                     selectedModel,
                     false,
                     true,
-                    false
+                    false,
                   )
                 }
                 onGenerateWithError={() =>
@@ -766,7 +766,7 @@ export default function ProblemRender({
                     selectedModel,
                     true,
                     true,
-                    false
+                    false,
                   )
                 }
                 onRefetch={getCodeToGenerateTestCaseInputs}
@@ -831,7 +831,7 @@ export default function ProblemRender({
                     undefined,
                     true,
                     false,
-                    false
+                    false,
                   )
                 }
                 onGenerateWithError={() =>
@@ -840,7 +840,7 @@ export default function ProblemRender({
                     undefined,
                     true,
                     true,
-                    false
+                    false,
                   )
                 }
                 onRefetch={getSolution}
@@ -958,7 +958,7 @@ export default function ProblemRender({
                             stdout: testResult.stdout,
                           },
                           null,
-                          2
+                          2,
                         )}
                       </div>
                     ))}
@@ -1043,7 +1043,7 @@ export default function ProblemRender({
                             selectedModel,
                             false,
                             true,
-                            false
+                            false,
                           );
                         if (generatedSolution) {
                           setUserSolution(generatedSolution);
@@ -1074,7 +1074,7 @@ export default function ProblemRender({
                             selectedModel,
                             false,
                             true,
-                            true
+                            true,
                           );
                         if (generatedSolution) {
                           setUserSolution(generatedSolution);
