@@ -28,14 +28,13 @@ export function IssueReportDialog() {
             noooooooo
           </DialogTitle>
           <DialogDescription>
-            this app is still early! there are bound to be a few bugs, but
-            the goal is to get to zero.
+            this app is still early! there are bound to be a few bugs, but the
+            goal is to get to zero.
             <br />
             <br />
             to report a bug, either{" "}
-            <span className="font-bold">open a github issue</span> or send
-            an email to{" "}
-            <span className="font-bold">anirudh@kamath.io</span>
+            <span className="font-bold">open a github issue</span> or send an
+            email to <span className="font-bold">anirudh@kamath.io</span>
           </DialogDescription>
         </DialogHeader>
         <DialogFooter className="flex-col sm:flex-row gap-2">
@@ -45,7 +44,7 @@ export function IssueReportDialog() {
               window.open(
                 "https://github.com/kamath/clankerrank/issues/new",
                 "_blank",
-                "noopener,noreferrer"
+                "noopener,noreferrer",
               );
               setShowIssueDialog(false);
             }}
@@ -55,8 +54,7 @@ export function IssueReportDialog() {
           <Button
             variant="outline"
             onClick={() => {
-              window.location.href =
-                "mailto:anirudh+clankerrank@kamath.io";
+              window.location.href = "mailto:anirudh+clankerrank@kamath.io";
               setShowIssueDialog(false);
             }}
           >
@@ -67,4 +65,3 @@ export function IssueReportDialog() {
     </Dialog>
   );
 }
-

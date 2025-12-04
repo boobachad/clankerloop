@@ -45,30 +45,32 @@ export default function NewProblemPageWrapper({
             </h1>
           </Link>
           <p>&middot;</p>
-          {user ? (
-            <p className="font-comic-relief">
-              hi {user.firstName.toLowerCase()}{" "}
-              <form
-                action={async () => {
-                  await signOutAction();
-                }}
-                className="inline"
-              >
-                <button
-                  type="submit"
-                  className="text-blue-500 hover:underline hover:cursor-pointer"
+          <div className="font-comic-relief">
+            {user ? (
+              <>
+                hi {user.firstName.toLowerCase()}{" "}
+                <form
+                  action={async () => {
+                    await signOutAction();
+                  }}
+                  className="inline"
                 >
-                  (sign out)
-                </button>
-              </form>
-            </p>
-          ) : (
-            <Link href="/login">
-              <p className="font-comic-relief text-blue-500 hover:underline hover:cursor-pointer">
-                sign in
-              </p>
-            </Link>
-          )}
+                  <button
+                    type="submit"
+                    className="text-blue-500 hover:underline hover:cursor-pointer"
+                  >
+                    (sign out)
+                  </button>
+                </form>
+              </>
+            ) : (
+              <Link href="/login">
+                <span className="text-blue-500 hover:underline hover:cursor-pointer">
+                  sign in
+                </span>
+              </Link>
+            )}
+          </div>
           <IssueReportDialog />
         </div>
       </div>

@@ -153,7 +153,7 @@ export default function ProblemRender({
     problemId,
     userSolution,
     language,
-    user.apiKey
+    user.apiKey,
   );
 
   const {
@@ -289,24 +289,22 @@ export default function ProblemRender({
             </h1>
           </Link>
           <p>&middot;</p>
-          {user && (
-            <div className="font-comic-relief">
-              hi {user.firstName.toLowerCase()}{" "}
-              <form
-                action={async () => {
-                  await signOutAction();
-                }}
-                className="inline"
+          <div className="font-comic-relief">
+            hi {user.firstName.toLowerCase()}{" "}
+            <form
+              action={async () => {
+                await signOutAction();
+              }}
+              className="inline"
+            >
+              <button
+                type="submit"
+                className="text-blue-500 hover:underline hover:cursor-pointer"
               >
-                <button
-                  type="submit"
-                  className="text-blue-500 hover:underline hover:cursor-pointer"
-                >
-                  (sign out)
-                </button>
-              </form>
-            </div>
-          )}
+                (sign out)
+              </button>
+            </form>
+          </div>
           <IssueReportDialog />
         </div>
       </div>
@@ -474,7 +472,7 @@ export default function ProblemRender({
                             } catch (error) {
                               console.error(
                                 "Failed to run user solution:",
-                                error
+                                error,
                               );
                               setShowSubmitDialog(false);
                             }
