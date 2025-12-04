@@ -4,6 +4,7 @@ import "./globals.css";
 import { QueryClientProviderWrapper } from "./providers";
 import { Comic_Relief } from "next/font/google";
 import { AuthKitProvider } from "@workos-inc/authkit-nextjs/components";
+import { Analytics } from "@vercel/analytics/next";
 
 const geistSans = localFont({
   src: "./fonts/GeistVF.woff",
@@ -36,6 +37,7 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} ${comicRelief.variable}`}
       >
+        <Analytics />
         <AuthKitProvider>
           <QueryClientProviderWrapper>{children}</QueryClientProviderWrapper>
         </AuthKitProvider>
