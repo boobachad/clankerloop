@@ -32,17 +32,24 @@ export default function NewProblemView({
 
   // Initialize selected focus areas from URL params if present
   const [selectedFocusAreaIds, setSelectedFocusAreaIds] = useState<string[]>(
-    () => {
-      if (typeof window === "undefined") return [];
-      const params = new URLSearchParams(window.location.search);
-      const focusAreasParam = params.get("focusAreas");
-      if (focusAreasParam) {
-        const ids = focusAreasParam.split(",").filter(Boolean);
-        return ids.filter((id) => focusAreas.some((area) => area.id === id));
-      }
-      return [];
-    },
+    []
   );
+
+  // Sync selected focus areas with URL params on mount and when searchParams change
+  useEffect(() => {
+    const focusAreasParam = searchParams.get("focusAreas");
+    if (focusAreasParam) {
+      const ids = focusAreasParam.split(",").filter(Boolean);
+      const validIds = ids.filter((id) =>
+        focusAreas.some((area) => area.id === id)
+      );
+      setSelectedFocusAreaIds(validIds);
+    } else {
+      setSelectedFocusAreaIds([]);
+    }
+    // Only run on mount and when searchParams change, not when focusAreas change
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams]);
 
   // Auto-generate if flag is set and user is logged in
   useEffect(() => {
@@ -74,7 +81,7 @@ export default function NewProblemView({
         true, // autoGenerate
         undefined, // returnDummy
         undefined, // startFrom
-        selectedFocusAreaIds.length > 0 ? selectedFocusAreaIds : undefined,
+        selectedFocusAreaIds.length > 0 ? selectedFocusAreaIds : undefined
       );
       router.push(`/problem/${result.problemId}`);
     } catch (error) {
