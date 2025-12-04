@@ -42,7 +42,7 @@ export function IssueReportDialog() {
             variant="default"
             onClick={() => {
               window.open(
-                "https://github.com/kamath/clankerrank/issues/new",
+                "https://github.com/kamath/ClankerLoop/issues/new",
                 "_blank",
                 "noopener,noreferrer",
               );
@@ -54,7 +54,7 @@ export function IssueReportDialog() {
           <Button
             variant="outline"
             onClick={() => {
-              window.location.href = "mailto:anirudh+clankerrank@kamath.io";
+              window.location.href = "mailto:anirudh+ClankerLoop@kamath.io";
               setShowIssueDialog(false);
             }}
           >

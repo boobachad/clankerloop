@@ -285,7 +285,7 @@ export default function ProblemRender({
               className="text-xl font-bold hover:cursor-pointer"
               style={{ fontFamily: "var(--font-comic-relief)" }}
             >
-              ClankerRank
+              ClankerLoop
             </h1>
           </Link>
           <p>&middot;</p>
