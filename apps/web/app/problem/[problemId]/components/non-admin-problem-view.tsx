@@ -92,13 +92,11 @@ export default function NonAdminProblemView({
   const [allFocusAreas, setAllFocusAreas] = useState<FocusArea[]>([]);
   const [problemFocusAreas, setProblemFocusAreas] = useState<FocusArea[]>([]);
   const [selectedFocusAreaIds, setSelectedFocusAreaIds] = useState<string[]>(
-    [],
+    []
   );
   const [isLoadingFocusAreas, setIsLoadingFocusAreas] = useState(true);
   const [isRegeneratingWithFocusAreas, setIsRegeneratingWithFocusAreas] =
     useState(false);
-  /* eslint-disable-next-line @typescript-eslint/no-unused-vars */
-  const [focusAreasChanged, setFocusAreasChanged] = useState(false);
 
   // Load focus areas
   useEffect(() => {
@@ -128,18 +126,9 @@ export default function NonAdminProblemView({
   }, [isFailed]);
 
   // Track if focus areas have changed from initial
-  const handleFocusAreaChange = useCallback(
-    (newIds: string[]) => {
-      setSelectedFocusAreaIds(newIds);
-      const originalIds = problemFocusAreas.map((fa) => fa.id).sort();
-      const sortedNewIds = [...newIds].sort();
-      const hasChanged =
-        originalIds.length !== sortedNewIds.length ||
-        originalIds.some((id, idx) => id !== sortedNewIds[idx]);
-      setFocusAreasChanged(hasChanged);
-    },
-    [problemFocusAreas],
-  );
+  const handleFocusAreaChange = useCallback((newIds: string[]) => {
+    setSelectedFocusAreaIds(newIds);
+  }, []);
 
   const handleRegenerateWithFocusAreas = async () => {
     if (!selectedModel) return;
@@ -151,7 +140,7 @@ export default function NonAdminProblemView({
         true,
         undefined,
         undefined,
-        selectedFocusAreaIds.length > 0 ? selectedFocusAreaIds : undefined,
+        selectedFocusAreaIds.length > 0 ? selectedFocusAreaIds : undefined
       );
       router.push(`/problem/${result.problemId}`);
     } catch (error) {
@@ -177,7 +166,7 @@ export default function NonAdminProblemView({
         input: testCaseInputs?.[sampleIndex] ?? null,
         output: testCaseOutputs?.[allTestCaseIndex] ?? null,
       };
-    },
+    }
   );
 
   // Helper function to get step display name
@@ -234,7 +223,7 @@ export default function NonAdminProblemView({
         user.apiKey,
         true,
         undefined,
-        { problemId, direction },
+        { problemId, direction }
       );
       router.push(`/problem/${result.problemId}`);
     } catch (error) {
@@ -253,7 +242,7 @@ export default function NonAdminProblemView({
         user.apiKey,
         true,
         undefined,
-        { problemId, direction: "similar" },
+        { problemId, direction: "similar" }
       );
       router.push(`/problem/${result.problemId}`);
     } catch (error) {
