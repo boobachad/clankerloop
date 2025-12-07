@@ -47,7 +47,6 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import AdminCollapsibles from "./admin-collapsibles";
 import NonAdminProblemView from "./non-admin-problem-view";
 import CustomTestInputs from "./custom-test-inputs";
 import { IssueReportDialog } from "./issue-report-dialog";
@@ -55,11 +54,9 @@ import { IssueReportDialog } from "./issue-report-dialog";
 export default function ProblemRender({
   problemId,
   user,
-  isAdmin,
 }: {
   problemId: string;
   user: ClientFacingUserObject;
-  isAdmin: boolean;
 }) {
   const [userSolution, setUserSolution] = useState<string | null>(null);
   const [language, setLanguage] = useState<CodeGenLanguage>("typescript");
@@ -153,7 +150,7 @@ export default function ProblemRender({
     problemId,
     userSolution,
     language,
-    user.apiKey,
+    user.apiKey
   );
 
   const {
@@ -231,14 +228,6 @@ export default function ProblemRender({
   }, [completedSteps, testCases, getTestCases]);
 
   useEffect(() => {
-    // Only fetch input-code for admin users
-    if (
-      isAdmin &&
-      completedSteps.includes("generateTestCaseInputCode") &&
-      !testCaseInputCode
-    ) {
-      getCodeToGenerateTestCaseInputs();
-    }
     // Fetch test case inputs when input code step completes (they're generated together)
     // Non-admin users also need this for sample test cases
     if (
@@ -248,32 +237,11 @@ export default function ProblemRender({
       getTestCaseInputs();
     }
   }, [
-    isAdmin,
     completedSteps,
     testCaseInputCode,
     testCaseInputs,
     getCodeToGenerateTestCaseInputs,
     getTestCaseInputs,
-  ]);
-
-  useEffect(() => {
-    // Only fetch solution and outputs for admin users
-    if (isAdmin) {
-      if (completedSteps.includes("generateSolution") && !solution) {
-        getSolution();
-      }
-      // Also fetch test case outputs when solution step completes (they're generated together)
-      if (completedSteps.includes("generateSolution") && !testCaseOutputs) {
-        getTestCaseOutputs();
-      }
-    }
-  }, [
-    isAdmin,
-    completedSteps,
-    solution,
-    testCaseOutputs,
-    getSolution,
-    getTestCaseOutputs,
   ]);
 
   return (
@@ -313,83 +281,21 @@ export default function ProblemRender({
         className="flex-1 w-full min-h-0"
       >
         <ResizablePanel defaultSize={20} className="min-h-0">
-          {isAdmin ? (
-            <AdminCollapsibles
-              problemId={problemId}
-              user={user}
-              selectedModel={selectedModel}
-              setSelectedModel={setSelectedModel}
-              userSolution={userSolution}
-              setUserSolution={setUserSolution}
-              language={language}
-              isProblemTextLoading={isProblemTextLoading}
-              problemTextError={problemTextError}
-              problemText={problemText}
-              getProblemText={getProblemText}
-              callGenerateProblemText={callGenerateProblemText}
-              isTestCasesLoading={isTestCasesLoading}
-              testCasesError={testCasesError}
-              testCases={testCases}
-              getTestCases={getTestCases}
-              callGenerateTestCases={callGenerateTestCases}
-              isTestCaseInputsLoading={isTestCaseInputsLoading}
-              testCaseInputCodeError={testCaseInputCodeError}
-              testCaseInputCode={testCaseInputCode}
-              getCodeToGenerateTestCaseInputs={getCodeToGenerateTestCaseInputs}
-              callGenerateTestCaseInputCode={callGenerateTestCaseInputCode}
-              testCaseInputs={testCaseInputs}
-              getTestCaseInputs={getTestCaseInputs}
-              isGenerateSolutionLoading={isGenerateSolutionLoading}
-              solutionError={solutionError}
-              solution={solution}
-              getSolution={getSolution}
-              callGenerateSolution={callGenerateSolution}
-              testCaseOutputs={testCaseOutputs}
-              getTestCaseOutputs={getTestCaseOutputs}
-              isRunUserSolutionLoading={isRunUserSolutionLoading}
-              userSolutionError={userSolutionError}
-              userSolutionTestResults={userSolutionTestResults}
-              callRunUserSolution={callRunUserSolution}
-              isRunCustomTestsLoading={isRunCustomTestsLoading}
-              customTestsError={customTestsError}
-              customTestResults={customTestResults}
-              callRunCustomTests={callRunCustomTests}
-              completedSteps={completedSteps}
-              currentStep={currentStep}
-              isGenerating={isGenerating}
-              isFailed={isFailed}
-              generationError={generationError}
-              workflowStatus={workflowStatus}
-              isWorkflowStatusLoading={isWorkflowStatusLoading}
-              isWorkflowActive={isWorkflowActive}
-              isWorkflowComplete={isWorkflowComplete}
-              isWorkflowErrored={isWorkflowErrored}
-              isModelsLoading={isModelsLoading}
-              modelsError={modelsError}
-              models={models}
-              problemModel={problemModel}
-              isGenerateSolutionWithModelLoading={
-                isGenerateSolutionWithModelLoading
-              }
-              callGenerateSolutionWithModel={callGenerateSolutionWithModel}
-            />
-          ) : (
-            <NonAdminProblemView
-              problemText={problemText}
-              testCases={testCases}
-              testCaseInputs={testCaseInputs}
-              testCaseOutputs={testCaseOutputs}
-              completedSteps={completedSteps}
-              currentStep={currentStep}
-              isGenerating={isGenerating}
-              isFailed={isFailed}
-              generationError={generationError}
-              problemId={problemId}
-              user={user}
-              selectedModel={selectedModel}
-              isWorkflowErrored={isWorkflowErrored}
-            />
-          )}
+          <NonAdminProblemView
+            problemText={problemText}
+            testCases={testCases}
+            testCaseInputs={testCaseInputs}
+            testCaseOutputs={testCaseOutputs}
+            completedSteps={completedSteps}
+            currentStep={currentStep}
+            isGenerating={isGenerating}
+            isFailed={isFailed}
+            generationError={generationError}
+            problemId={problemId}
+            user={user}
+            selectedModel={selectedModel}
+            isWorkflowErrored={isWorkflowErrored}
+          />
         </ResizablePanel>
         <ResizableHandle withHandle />
         <ResizablePanel defaultSize={50} className="min-h-0 flex flex-col">
@@ -472,7 +378,7 @@ export default function ProblemRender({
                             } catch (error) {
                               console.error(
                                 "Failed to run user solution:",
-                                error,
+                                error
                               );
                               setShowSubmitDialog(false);
                             }

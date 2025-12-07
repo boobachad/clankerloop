@@ -33,12 +33,5 @@ export default async function Page({
     createdAt: user.createdAt,
     updatedAt: user.updatedAt,
   };
-  const isAdmin = user.metadata?.role === "superduperadmin";
-  return (
-    <ProblemRender
-      problemId={problemId}
-      user={clientFacingUser}
-      isAdmin={isAdmin}
-    />
-  );
+  return <ProblemRender problemId={problemId} user={clientFacingUser} />;
 }
