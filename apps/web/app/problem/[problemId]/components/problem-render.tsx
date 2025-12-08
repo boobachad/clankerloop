@@ -63,7 +63,7 @@ export default function ProblemRender({
 
   const { data: problemText, getData: getProblemText } = useProblemText(
     problemId,
-    user.apiKey
+    user.apiKey,
   );
 
   const {
@@ -86,7 +86,7 @@ export default function ProblemRender({
 
   const { data: testCases, getData: getTestCases } = useTestCases(
     problemId,
-    user.apiKey
+    user.apiKey,
   );
 
   const { data: testCaseInputCode, getData: getCodeToGenerateTestCaseInputs } =
@@ -107,12 +107,12 @@ export default function ProblemRender({
       problemId,
       userSolution,
       language,
-      user.apiKey
+      user.apiKey,
     );
 
   const { completedSteps, isGenerating } = useGenerationStatus(
     problemId,
-    user.apiKey
+    user.apiKey,
   );
 
   // Set default model: use problem model if available, otherwise use first model from list
@@ -314,7 +314,7 @@ export default function ProblemRender({
                             } catch (error) {
                               console.error(
                                 "Failed to run user solution:",
-                                error
+                                error,
                               );
                               setShowSubmitDialog(false);
                             }

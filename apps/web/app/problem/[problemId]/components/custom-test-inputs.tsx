@@ -44,7 +44,7 @@ export default function CustomTestInputs({
     problemId,
     userSolution,
     language,
-    user.apiKey
+    user.apiKey,
   );
 
   const { data: testCases } = useTestCases(problemId, user.apiKey);
@@ -385,8 +385,8 @@ export default function CustomTestInputs({
                         prev.map((tc) =>
                           tc.id === testCase.id
                             ? { ...tc, inputText: e.target.value }
-                            : tc
-                        )
+                            : tc,
+                        ),
                       );
                     }}
                     className="font-mono text-sm min-h-[80px] w-full"
