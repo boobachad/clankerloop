@@ -24,7 +24,6 @@ import {
 import { Skeleton } from "@/components/ui/skeleton";
 import Link from "next/link";
 import { ClientFacingUserObject } from "@/lib/auth-types";
-import { signOutAction } from "@/app/(auth)/signout";
 import { Loader2Icon, PlayIcon, SendIcon } from "lucide-react";
 import {
   Select,
@@ -207,7 +206,7 @@ export default function ProblemRender({
             hi {user.firstName.toLowerCase()}{" "}
             <form
               action={async () => {
-                await signOutAction();
+                // No sign out action (auth removed)
               }}
               className="inline"
             >

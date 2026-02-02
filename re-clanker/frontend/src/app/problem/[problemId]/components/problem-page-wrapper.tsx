@@ -10,7 +10,6 @@ import {
 import { Skeleton } from "@/components/ui/skeleton";
 import Link from "next/link";
 import { ClientFacingUserObject } from "@/lib/auth-types";
-import { signOutAction } from "@/app/(auth)/signout";
 import { PlayIcon, SendIcon } from "lucide-react";
 import {
   Select,
@@ -21,7 +20,7 @@ import {
 } from "@/components/ui/select";
 import NewProblemView from "./new-problem-view";
 import { IssueReportDialog } from "./issue-report-dialog";
-import type { FocusArea } from "@repo/api-types";
+import type { FocusArea } from "@/types";
 
 interface NewProblemPageWrapperProps {
   user: ClientFacingUserObject | null;
@@ -51,7 +50,7 @@ export default function NewProblemPageWrapper({
                 hi {user.firstName.toLowerCase()}{" "}
                 <form
                   action={async () => {
-                    await signOutAction();
+                    // No sign out action (auth removed)
                   }}
                   className="inline"
                 >

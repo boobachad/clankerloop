@@ -4,7 +4,6 @@ import { useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { RefreshCw } from "lucide-react";
-import posthog from "posthog-js";
 
 export default function Error({
   error,
@@ -17,11 +16,6 @@ export default function Error({
     console.error("Client-side error:", error);
 
     // Capture error as PostHog event
-    posthog.capture("error_boundary_triggered", {
-      error_message: error.message,
-      error_stack: error.stack,
-      error_digest: error.digest,
-    });
   }, [error]);
 
   return (
