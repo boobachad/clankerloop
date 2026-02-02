@@ -27,10 +27,12 @@ re-clanker/
 │   └── README.md      # Backend documentation
 │
 └── frontend/          # Next.js 16 application
-    ├── app/           # Next.js app router
-    ├── components/    # React components (shadcn/ui)
-    ├── lib/           # Utilities & API client
-    ├── hooks/         # Custom React hooks
+    ├── src/           # Source directory
+    │   ├── app/       # Next.js app router
+    │   ├── components/# React components (shadcn/ui)
+    │   ├── lib/       # Utilities & API client
+    │   └── hooks/     # Custom React hooks
+    ├── public/        # Static assets
     ├── .env.example   # Environment template
     └── README.md      # Frontend documentation
 ```

@@ -65,20 +65,21 @@ npm start
 ## Project Structure
 
 ```
-app/
-  layout.tsx           - Root layout (no AuthKitProvider)
-  page.tsx             - Home page (shows new problem interface)
-  problem/             - Problem pages
-  api/                 - API route handlers (if any)
-  globals.css          - Global styles with design tokens
-components/
-  ui/                  - shadcn/ui components
-  ai-elements/         - AI-specific components
-  ...                  - Other application components
-lib/
-  api-client.ts        - API client (no auth headers)
-  utils.ts             - Utility functions
-hooks/                 - Custom React hooks
+src/
+  app/
+    layout.tsx           - Root layout (no AuthKitProvider)
+    page.tsx             - Home page (shows new problem interface)
+    problem/             - Problem pages
+    api/                 - API route handlers (if any)
+    globals.css          - Global styles with design tokens
+  components/
+    ui/                  - shadcn/ui components
+    ai-elements/         - AI-specific components
+    ...                  - Other application components
+  lib/
+    api-client.ts        - API client (no auth headers)
+    utils.ts             - Utility functions
+  hooks/                 - Custom React hooks
 ```
 
 ## Design Tokens
