@@ -7,6 +7,7 @@ import (
 	"github.com/boobachad/clankerloop/re-clanker/backend/internal/database"
 	"github.com/boobachad/clankerloop/re-clanker/backend/internal/models"
 	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5"
 )
 
 // FocusAreaRepository handles database operations for focus areas
