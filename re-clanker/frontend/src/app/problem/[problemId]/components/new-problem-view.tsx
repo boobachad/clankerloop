@@ -8,7 +8,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { createProblem } from "@/actions/create-problem";
 import { ClientFacingUserObject } from "@/lib/auth-types";
 import { FocusAreaSelector } from "@/components/focus-area-selector";
-import type { FocusArea } from "@repo/api-types";
+import type { FocusArea } from "@/types";
 import {
   Collapsible,
   CollapsibleContent,

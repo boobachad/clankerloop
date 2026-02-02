@@ -1,7 +1,7 @@
 "use client";
 
 import { cn } from "@/lib/utils";
-import type { FocusArea } from "@repo/api-types";
+import type { FocusArea } from "@/types";
 
 interface FocusAreaSelectorProps {
   focusAreas: FocusArea[];

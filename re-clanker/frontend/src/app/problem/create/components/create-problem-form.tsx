@@ -16,14 +16,14 @@ import { FocusAreaSelector } from "@/components/focus-area-selector";
 import { listModels } from "@/actions/list-models";
 import { createProblem } from "@/actions/create-problem";
 import { listFocusAreas } from "@/actions/list-focus-areas";
-import type { FocusArea } from "@repo/api-types";
+import type { FocusArea } from "@/types";
 
 interface CreateProblemFormProps {
   encryptedUserId: string;
 }
 
 export default function CreateProblemForm({
-  encryptedUserId,
+  
 }: CreateProblemFormProps) {
   const router = useRouter();
   const [models, setModels] = useState<Array<{ id: string; name: string }>>([]);
@@ -84,7 +84,7 @@ export default function CreateProblemForm({
       // Create problem with selected model
       const { problemId } = await createProblem(
         selectedModel,
-        encryptedUserId,
+        
         autoGenerate,
         returnDummy,
         undefined, // startFrom

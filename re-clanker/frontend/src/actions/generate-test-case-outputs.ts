@@ -1,11 +1,25 @@
-import { apiPost } from "@/lib/api-client";
+import { apiGet, apiPost } from "@/lib/api-client";
+
+interface TestOutputsGenerateResponse {
+  testCases: unknown[];
+  jobId: string | null;
+}
 
 export async function generateTestCaseOutputs(
   problemId: string,
-  model: string,
+  
+  enqueueNextStep: boolean = true,
 ) {
-  return apiPost<{ testCases: unknown[]; jobId: string | null }>(
-    `/api/v1/problems/${problemId}/generate-test-case-outputs`,
-    { model },
+  const data = await apiPost<TestOutputsGenerateResponse>(
+    `/${problemId}/test-cases/outputs/generate`,
+    { enqueueNextStep },
   );
+  return data.testCases;
+}
+
+export async function getTestCaseOutputs(
+  problemId: string,
+  
+) {
+  return apiGet<unknown[]>(`/${problemId}/test-cases/outputs`);
 }

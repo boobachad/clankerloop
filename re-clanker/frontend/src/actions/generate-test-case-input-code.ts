@@ -1,11 +1,30 @@
-import { apiPost } from "@/lib/api-client";
+import { apiGet, apiPost } from "@/lib/api-client";
+
+interface InputCodeGenerateResponse {
+  inputCodes: string[];
+  jobId: string | null;
+}
 
 export async function generateTestCaseInputCode(
   problemId: string,
   model: string,
+  
+  enqueueNextStep: boolean = true,
+  forceError?: boolean,
+  returnDummy?: boolean,
 ) {
-  return apiPost<{ inputCodes: string[]; jobId: string | null }>(
-    `/api/v1/problems/${problemId}/generate-test-case-input-code`,
-    { model },
+  const data = await apiPost<InputCodeGenerateResponse>(
+    `/${problemId}/test-cases/input-code/generate`,
+    { model, enqueueNextStep, forceError, returnDummy },
+  );
+  return data.inputCodes;
+}
+
+export async function getTestCaseInputCode(
+  problemId: string,
+  
+) {
+  return apiGet<string[] | null>(
+    `/${problemId}/test-cases/input-code`,
   );
 }

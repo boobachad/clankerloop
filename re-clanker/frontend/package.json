@@ -10,6 +10,7 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@hono/zod-openapi": "^1.2.1",
     "@hookform/resolvers": "^5.2.2",
     "@monaco-editor/react": "^4.7.0",
     "@radix-ui/react-accordion": "^1.2.12",
@@ -42,6 +43,8 @@
     "@tailwindcss/postcss": "^4.1.17",
     "@tanstack/react-query": "^5.90.11",
     "@xyflow/react": "^12.9.3",
+    "ai": "^6.0.68",
+    "braintrust": "^2.2.0",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "cmdk": "^1.1.1",
@@ -63,6 +66,7 @@
     "recharts": "2.15.4",
     "shiki": "^3.15.0",
     "sonner": "^2.0.7",
+    "streamdown": "^2.1.0",
     "tailwind-merge": "^3.4.0",
     "tailwindcss": "^4.1.17",
     "use-stick-to-bottom": "^1.1.1",

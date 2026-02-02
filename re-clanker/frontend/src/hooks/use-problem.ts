@@ -43,7 +43,6 @@ import { getStarterCode } from "@/actions/get-starter-code";
 
 export function useProblemText(
   problemId: string | null,
-  encryptedUserId?: string,
 ) {
   const queryClient = useQueryClient();
   const queryKey = ["problemText", problemId];
@@ -52,7 +51,7 @@ export function useProblemText(
     queryKey,
     queryFn: () => {
       if (!problemId) throw new Error("Problem ID is not set");
-      return getProblemText(problemId, encryptedUserId);
+      return getProblemText(problemId);
     },
     enabled: false,
   });
@@ -74,7 +73,7 @@ export function useProblemText(
       const result = await generateProblemText(
         id,
         model,
-        encryptedUserId,
+        
         enqueueNextStep ?? true,
         forceError,
         returnDummy,
@@ -116,7 +115,6 @@ export function useProblemText(
 
 export function useTestCases(
   problemId: string | null,
-  encryptedUserId?: string,
 ) {
   const queryClient = useQueryClient();
   const queryKey = ["testCases", problemId];
@@ -125,7 +123,7 @@ export function useTestCases(
     queryKey,
     queryFn: () => {
       if (!problemId) throw new Error("Problem ID is not set");
-      return getTestCases(problemId, encryptedUserId);
+      return getTestCases(problemId);
     },
     enabled: false,
   });
@@ -147,7 +145,7 @@ export function useTestCases(
       const result = await generateTestCases(
         id,
         model,
-        encryptedUserId,
+        
         enqueueNextStep ?? true,
         forceError,
         returnDummy,
@@ -189,7 +187,6 @@ export function useTestCases(
 
 export function useTestCaseInputCode(
   problemId: string | null,
-  encryptedUserId?: string,
 ) {
   const queryClient = useQueryClient();
   const queryKey = ["testCaseInputCode", problemId];
@@ -198,7 +195,7 @@ export function useTestCaseInputCode(
     queryKey,
     queryFn: () => {
       if (!problemId) throw new Error("Problem ID is not set");
-      return getTestCaseInputCode(problemId, encryptedUserId);
+      return getTestCaseInputCode(problemId);
     },
     enabled: false,
   });
@@ -220,7 +217,7 @@ export function useTestCaseInputCode(
       const result = await generateTestCaseInputCode(
         id,
         model,
-        encryptedUserId,
+        
         enqueueNextStep ?? true,
         forceError,
         returnDummy,
@@ -262,7 +259,6 @@ export function useTestCaseInputCode(
 
 export function useTestCaseInputs(
   problemId: string | null,
-  encryptedUserId?: string,
 ) {
   const queryClient = useQueryClient();
   const queryKey = ["testCaseInputs", problemId];
@@ -271,7 +267,7 @@ export function useTestCaseInputs(
     queryKey,
     queryFn: () => {
       if (!problemId) throw new Error("Problem ID is not set");
-      return getTestCaseInputs(problemId, encryptedUserId);
+      return getTestCaseInputs(problemId);
     },
     enabled: false,
   });
@@ -286,7 +282,7 @@ export function useTestCaseInputs(
     }) => {
       const result = await generateTestCaseInputs(
         id,
-        encryptedUserId,
+        
         enqueueNextStep ?? true,
       );
       queryClient.setQueryData(queryKey, result);
@@ -318,7 +314,6 @@ export function useTestCaseInputs(
 
 export function useSolution(
   problemId: string | null,
-  encryptedUserId?: string,
 ) {
   const queryClient = useQueryClient();
   const queryKey = ["solution", problemId];
@@ -327,7 +322,7 @@ export function useSolution(
     queryKey,
     queryFn: () => {
       if (!problemId) throw new Error("Problem ID is not set");
-      return getSolution(problemId, encryptedUserId);
+      return getSolution(problemId);
     },
     enabled: false,
   });
@@ -351,7 +346,7 @@ export function useSolution(
       const result = await generateSolution(
         id,
         model,
-        encryptedUserId,
+        
         updateProblem,
         enqueueNextStep,
         forceError,
@@ -396,7 +391,6 @@ export function useSolution(
 
 export function useGenerateSolutionWithModel(
   problemId: string | null,
-  encryptedUserId?: string,
 ) {
   const generateMutation = useMutation({
     mutationFn: async ({
@@ -417,7 +411,7 @@ export function useGenerateSolutionWithModel(
       return await generateSolution(
         id,
         model,
-        encryptedUserId,
+        
         updateProblem,
         enqueueNextStep,
         forceError,
@@ -454,7 +448,6 @@ export function useGenerateSolutionWithModel(
 
 export function useTestCaseOutputs(
   problemId: string | null,
-  encryptedUserId?: string,
 ) {
   const queryClient = useQueryClient();
   const queryKey = ["testCaseOutputs", problemId];
@@ -463,7 +456,7 @@ export function useTestCaseOutputs(
     queryKey,
     queryFn: () => {
       if (!problemId) throw new Error("Problem ID is not set");
-      return getTestCaseOutputs(problemId, encryptedUserId);
+      return getTestCaseOutputs(problemId);
     },
     enabled: false,
   });
@@ -478,7 +471,7 @@ export function useTestCaseOutputs(
     }) => {
       const result = await generateTestCaseOutputs(
         id,
-        encryptedUserId,
+        
         enqueueNextStep ?? true,
       );
       queryClient.setQueryData(queryKey, result);
@@ -512,7 +505,6 @@ export function useRunUserSolution(
   problemId: string | null,
   userSolution: string | null,
   language: CodeGenLanguage = "typescript",
-  encryptedUserId?: string,
 ) {
   const queryClient = useQueryClient();
   const queryKey = ["runUserSolution", problemId, userSolution, language];
@@ -526,7 +518,7 @@ export function useRunUserSolution(
         problemId,
         userSolution,
         language,
-        encryptedUserId,
+        
       );
     },
     enabled: false,
@@ -542,7 +534,7 @@ export function useRunUserSolution(
       code: string;
       lang: CodeGenLanguage;
     }) => {
-      return runUserSolution(id, code, lang, encryptedUserId);
+      return runUserSolution(id, code, lang);
     },
     onSuccess: (data) => {
       queryClient.setQueryData(queryKey, data);
@@ -571,7 +563,6 @@ export function useRunUserSolutionWithCustomInputs(
   problemId: string | null,
   userSolution: string | null,
   language: CodeGenLanguage = "typescript",
-  encryptedUserId?: string,
 ) {
   const [results, setResults] = useState<CustomTestResult[] | null>(null);
   const [error, setError] = useState<Error | null>(null);
@@ -593,7 +584,7 @@ export function useRunUserSolutionWithCustomInputs(
         code,
         customInputs,
         lang,
-        encryptedUserId,
+        
       );
     },
     onSuccess: (data) => {
@@ -628,13 +619,12 @@ export function useRunUserSolutionWithCustomInputs(
 
 export function useGenerationStatus(
   problemId: string | null,
-  encryptedUserId?: string,
 ) {
   const query = useQuery({
     queryKey: ["generationStatus", problemId],
     queryFn: () => {
       if (!problemId) throw new Error("Problem ID is not set");
-      return getGenerationStatus(problemId, encryptedUserId);
+      return getGenerationStatus(problemId);
     },
     enabled: !!problemId,
     staleTime: 0,
@@ -661,13 +651,12 @@ export function useGenerationStatus(
 
 export function useWorkflowStatus(
   problemId: string | null,
-  encryptedUserId?: string,
 ) {
   const query = useQuery({
     queryKey: ["workflowStatus", problemId],
     queryFn: () => {
       if (!problemId) throw new Error("Problem ID is not set");
-      return getWorkflowStatus(problemId, encryptedUserId);
+      return getWorkflowStatus(problemId);
     },
     enabled: !!problemId,
     staleTime: 0,
@@ -715,7 +704,7 @@ export function useWorkflowStatus(
 
 export function useModels(encryptedUserId?: string) {
   const query = useQuery({
-    queryKey: ["models", encryptedUserId],
+    queryKey: ["models"],
     queryFn: () => listModels(encryptedUserId),
     staleTime: 5 * 60 * 1000, // 5 minutes
   });
@@ -730,13 +719,12 @@ export function useModels(encryptedUserId?: string) {
 
 export function useProblemModel(
   problemId: string | null,
-  encryptedUserId?: string,
 ) {
   const query = useQuery({
     queryKey: ["problemModel", problemId],
     queryFn: () => {
       if (!problemId) throw new Error("Problem ID is not set");
-      return getProblemModel(problemId, encryptedUserId);
+      return getProblemModel(problemId);
     },
     enabled: !!problemId,
     staleTime: 5 * 60 * 1000, // 5 minutes
@@ -752,13 +740,12 @@ export function useProblemModel(
 export function useStarterCode(
   problemId: string | null,
   language: CodeGenLanguage,
-  encryptedUserId?: string,
 ) {
   const query = useQuery({
     queryKey: ["starterCode", problemId, language],
     queryFn: async () => {
       if (!problemId) throw new Error("Problem ID is not set");
-      return getStarterCode(problemId, language, encryptedUserId);
+      return getStarterCode(problemId, language);
     },
     enabled: false, // Only fetch when explicitly called
     staleTime: Infinity, // Starter code doesn't change

@@ -3,13 +3,17 @@ import type { CreateProblemResponse, StartFrom } from "@/types";
 
 export async function createProblem(
   model: string,
+  
   autoGenerate: boolean = true,
   returnDummy?: boolean,
   startFrom?: StartFrom,
   focusAreaIds?: string[],
 ) {
+  const queryParams = new URLSearchParams({
+    autoGenerate: autoGenerate.toString(),
+  });
   return apiPost<CreateProblemResponse>(
-    `/api/v1/problems`,
+    `?${queryParams.toString()}`,
     {
       model,
       ...(returnDummy !== undefined && { returnDummy }),

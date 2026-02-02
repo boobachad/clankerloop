@@ -1,6 +1,11 @@
 import { apiGet } from "@/lib/api-client";
-import type { ProblemModel } from "@/types";
 
-export async function getProblemModel(problemId: string) {
-  return apiGet<ProblemModel>(`/api/v1/problems/${problemId}/model`);
+export async function getProblemModel(
+  problemId: string,
+  
+) {
+  const data = await apiGet<{ model: string | null }>(
+    `/${problemId}/model`,
+  );
+  return data.model;
 }

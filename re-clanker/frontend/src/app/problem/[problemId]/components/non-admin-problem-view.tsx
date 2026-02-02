@@ -26,7 +26,7 @@ import { ClientFacingUserObject } from "@/lib/auth-types";
 import { listFocusAreas } from "@/actions/list-focus-areas";
 import { getProblemFocusAreas } from "@/actions/get-problem-focus-areas";
 import { FocusAreaSelector } from "@/components/focus-area-selector";
-import type { FocusArea } from "@repo/api-types";
+import type { FocusArea } from "@/types";
 import {
   Collapsible,
   CollapsibleContent,
