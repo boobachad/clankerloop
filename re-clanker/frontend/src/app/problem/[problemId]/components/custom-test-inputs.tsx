@@ -44,16 +44,15 @@ export default function CustomTestInputs({
     problemId,
     userSolution,
     language,
-    user.apiKey,
   );
 
-  const { data: testCases } = useTestCases(problemId, user.apiKey);
-  const { data: testCaseInputs } = useTestCaseInputs(problemId, user.apiKey);
+  const { data: testCases } = useTestCases(problemId);
+  const { data: testCaseInputs } = useTestCaseInputs(problemId);
   const {
     data: userSolutionTestResults,
     isLoading: isRunUserSolutionLoading,
     error: userSolutionError,
-  } = useRunUserSolution(problemId, userSolution, language, user.apiKey);
+  } = useRunUserSolution(problemId, userSolution, language);
 
   const [viewMode, setViewMode] = useState<"custom" | "results">("custom");
   const [customTestCases, setCustomTestCases] = useState<

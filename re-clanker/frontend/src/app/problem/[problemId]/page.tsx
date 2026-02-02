@@ -10,5 +10,5 @@ export default async function Page({
   const { problemId } = await params;
   
   // No auth - render problem directly
-  return <ProblemRender problemId={problemId} user={null} />;
+  return <ProblemRender problemId={problemId} user={null as any} />;
 }

@@ -19,7 +19,7 @@ import { listFocusAreas } from "@/actions/list-focus-areas";
 import type { FocusArea } from "@/types";
 
 interface CreateProblemFormProps {
-  encryptedUserId: string;
+  
 }
 
 export default function CreateProblemForm({
@@ -41,7 +41,7 @@ export default function CreateProblemForm({
   useEffect(() => {
     async function loadModels() {
       try {
-        const modelsList = await listModels(encryptedUserId);
+        const modelsList = await listModels();
         if (!modelsList || modelsList.length === 0 || !modelsList[0]) {
           throw new Error("No models found. Please create a model first.");
         }
@@ -54,12 +54,12 @@ export default function CreateProblemForm({
       }
     }
     loadModels();
-  }, [encryptedUserId]);
+  }, []);
 
   useEffect(() => {
     async function loadFocusAreas() {
       try {
-        const areas = await listFocusAreas(encryptedUserId);
+        const areas = await listFocusAreas();
         setFocusAreas(areas);
       } catch (error) {
         console.error("Failed to load focus areas:", error);
@@ -68,7 +68,7 @@ export default function CreateProblemForm({
       }
     }
     loadFocusAreas();
-  }, [encryptedUserId]);
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

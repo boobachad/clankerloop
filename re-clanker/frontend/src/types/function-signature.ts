@@ -24,7 +24,7 @@ export const TypeDefSchema: z.ZodType<TypeDef> = z.lazy(() =>
     }),
     z.object({
       kind: z.literal("object"),
-      properties: z.record(TypeDefSchema),
+      properties: z.record(z.string(), TypeDefSchema),
     }),
     z.object({
       kind: z.literal("map"),

@@ -62,7 +62,7 @@ export default function ProblemRender({
 
   const { data: problemText, getData: getProblemText } = useProblemText(
     problemId,
-    user.apiKey,
+    
   );
 
   const {
@@ -70,7 +70,7 @@ export default function ProblemRender({
     error: starterCodeError,
     data: starterCode,
     getData: getStarterCodeData,
-  } = useStarterCode(problemId, language, user.apiKey);
+  } = useStarterCode(problemId, language);
 
   useEffect(() => {
     if (!problemText) getProblemText();
@@ -85,33 +85,33 @@ export default function ProblemRender({
 
   const { data: testCases, getData: getTestCases } = useTestCases(
     problemId,
-    user.apiKey,
+    
   );
 
   const { data: testCaseInputCode, getData: getCodeToGenerateTestCaseInputs } =
-    useTestCaseInputCode(problemId, user.apiKey);
+    useTestCaseInputCode(problemId);
 
   const { data: testCaseInputs, getData: getTestCaseInputs } =
-    useTestCaseInputs(problemId, user.apiKey);
+    useTestCaseInputs(problemId);
 
   const { data: models } = useModels(user.apiKey);
 
-  const { model: problemModel } = useProblemModel(problemId, user.apiKey);
+  const { model: problemModel } = useProblemModel(problemId);
 
   const { isLoading: isRunUserSolutionLoading, runData: callRunUserSolution } =
-    useRunUserSolution(problemId, userSolution, language, user.apiKey);
+    useRunUserSolution(problemId, userSolution, language);
 
   const { isLoading: isRunCustomTestsLoading } =
     useRunUserSolutionWithCustomInputs(
       problemId,
       userSolution,
       language,
-      user.apiKey,
+      
     );
 
   const { completedSteps, isGenerating } = useGenerationStatus(
     problemId,
-    user.apiKey,
+    
   );
 
   // Set default model: use problem model if available, otherwise use first model from list

@@ -66,20 +66,20 @@ export default function NonAdminProblemView({
   const [isRegeneratingWithFocusAreas, setIsRegeneratingWithFocusAreas] =
     useState(false);
 
-  const { data: problemText } = useProblemText(problemId, user.apiKey);
-  const { data: testCases } = useTestCases(problemId, user.apiKey);
-  const { data: testCaseInputs } = useTestCaseInputs(problemId, user.apiKey);
-  const { data: testCaseOutputs } = useTestCaseOutputs(problemId, user.apiKey);
+  const { data: problemText } = useProblemText(problemId);
+  const { data: testCases } = useTestCases(problemId);
+  const { data: testCaseInputs } = useTestCaseInputs(problemId);
+  const { data: testCaseOutputs } = useTestCaseOutputs(problemId);
   const {
     completedSteps,
     currentStep,
     isGenerating,
     isFailed,
     error: generationError,
-  } = useGenerationStatus(problemId, user.apiKey);
+  } = useGenerationStatus(problemId);
   const { isErrored: isWorkflowErrored } = useWorkflowStatus(
     problemId,
-    user.apiKey,
+    
   );
 
   // Load focus areas
@@ -87,8 +87,8 @@ export default function NonAdminProblemView({
     async function loadFocusAreas() {
       try {
         const [allAreas, problemAreas] = await Promise.all([
-          listFocusAreas(user.apiKey),
-          getProblemFocusAreas(problemId, user.apiKey),
+          listFocusAreas(),
+          getProblemFocusAreas(problemId),
         ]);
         setAllFocusAreas(allAreas);
         setProblemFocusAreas(problemAreas.focusAreas);
@@ -100,7 +100,7 @@ export default function NonAdminProblemView({
       }
     }
     loadFocusAreas();
-  }, [problemId, user.apiKey]);
+  }, [problemId]);
 
   // Open focus areas when generation fails
   useEffect(() => {
@@ -120,7 +120,7 @@ export default function NonAdminProblemView({
     try {
       const result = await createProblem(
         selectedModel,
-        user.apiKey,
+        
         true,
         undefined,
         undefined,
@@ -204,7 +204,7 @@ export default function NonAdminProblemView({
     try {
       const result = await createProblem(
         selectedModel,
-        user.apiKey,
+        
         true,
         undefined,
         { problemId, direction },
@@ -223,7 +223,7 @@ export default function NonAdminProblemView({
     try {
       const result = await createProblem(
         selectedModel,
-        user.apiKey,
+        
         true,
         undefined,
         { problemId, direction: "similar" },

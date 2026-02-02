@@ -77,7 +77,7 @@ export default function NewProblemView({
       // Use first available model (backend will use default)
       const result = await createProblem(
         "anthropic/claude-sonnet-4.5", // Default model
-        user.apiKey,
+        
         true, // autoGenerate
         undefined, // returnDummy
         undefined, // startFrom
