@@ -3,7 +3,6 @@ import type { CreateProblemResponse, StartFrom } from "@/types";
 
 export async function createProblem(
   model: string,
-  
   autoGenerate: boolean = true,
   returnDummy?: boolean,
   startFrom?: StartFrom,
@@ -13,7 +12,7 @@ export async function createProblem(
     autoGenerate: autoGenerate.toString(),
   });
   return apiPost<CreateProblemResponse>(
-    `?${queryParams.toString()}`,
+    `/api/v1/problems?${queryParams.toString()}`,
     {
       model,
       ...(returnDummy !== undefined && { returnDummy }),

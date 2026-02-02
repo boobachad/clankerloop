@@ -62,22 +62,13 @@ export default function NewProblemView({
   }, [user, searchParams]);
 
   const handleGenerateProblem = async () => {
-    // If user is not logged in, redirect to login with focus areas in state
-    if (!user) {
-      const focusAreasParam =
-        selectedFocusAreaIds.length > 0
-          ? `?focusAreas=${selectedFocusAreaIds.join(",")}`
-          : "";
-      router.push(`/login${focusAreasParam}`);
-      return;
-    }
+    // No auth required - allow anyone to generate problems
 
     setIsGenerating(true);
     try {
       // Use first available model (backend will use default)
       const result = await createProblem(
-        "anthropic/claude-sonnet-4.5", // Default model
-        
+        "anthropic/claude-3.5-sonnet", // Default model
         true, // autoGenerate
         undefined, // returnDummy
         undefined, // startFrom
